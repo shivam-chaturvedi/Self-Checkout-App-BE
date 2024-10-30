@@ -1,20 +1,72 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Self Checkout App</title>
-    <link rel="stylesheet" href="styles.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
-    <script src="script.js"></script>
-</head>
-<body>
-    <select id="camera-select">
-        <option value="">Select a camera</option>
-    </select>
-    <div class="reader" id="qr-code-reader"> </div>
-    <ul id="list">
 
-    </ul>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen flex flex-col">
+
+    <!-- Header/Navbar -->
+    <nav class="bg-green-500 p-4 shadow-lg">
+        <div class="container mx-auto flex items-center justify-between">
+            <!-- Logo / Title -->
+            <h1 class="text-white text-2xl font-bold">Self Checkout</h1>
+
+            <!-- Navigation Links -->
+            <div class="hidden md:flex space-x-4">
+                <a href="/admin" class="text-white hover:bg-green-600 px-4 py-2 rounded transition">
+                    Admin
+                </a>
+                <a href="/logout" class="text-white hover:bg-red-600 px-4 py-2 rounded transition">
+                    Logout
+                </a>
+            </div>
+
+            <!-- Mobile Menu Button -->
+            <button id="menu-toggle" class="md:hidden text-white focus:outline-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden mt-2 space-y-2">
+            <a href="/admin" class="block text-white hover:bg-green-600 px-4 py-2 rounded transition">Admin</a>
+            <a href="/logout" class="block text-white hover:bg-red-600 px-4 py-2 rounded transition">Logout</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mx-auto flex-grow p-6">
+        <h2 class="text-center text-xl font-semibold mb-4">Select Camera</h2>
+        <select id="camera-select" class="block w-1/2 mx-auto p-3 border border-gray-300 rounded">
+            <option value="">Select a camera</option>
+        </select>
+
+        <div class="reader mt-8 border-2 border-dashed border-green-500 rounded-lg p-10 flex items-center justify-center">
+            <p class="text-gray-500">QR Code Reader</p>
+        </div>
+
+        <h3 class="text-center text-lg font-semibold mt-8">Scanned Items</h3>
+        <ul id="list" class="mx-auto mt-4 w-1/2 max-w-md space-y-2">
+            <!-- Items will be dynamically added here -->
+        </ul>
+    </div>
+
+    <script>
+        // Toggle mobile menu
+        const menuToggle = document.getElementById('menu-toggle');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        menuToggle.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+    </script>
+
 </body>
 </html>

@@ -25,6 +25,6 @@ public class Product extends CreatedAtUpdatedAt {
 	private String name;
 	
 	@Column(nullable = false)
-	private Long price;
+	private Double price;
 	
 }
