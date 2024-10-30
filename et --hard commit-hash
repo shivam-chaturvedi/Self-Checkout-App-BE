@@ -1,0 +1,6 @@
+[33m13f0221[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m HEAD@{0}: reset: moving to HEAD~1
+[33mf22d08b[m HEAD@{1}: reset: moving to HEAD
+[33mf22d08b[m HEAD@{2}: commit: buld uplaod added
+[33m13f0221[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m HEAD@{3}: commit: initial
+[33mb417105[m HEAD@{4}: Branch: renamed refs/heads/master to refs/heads/main
+[33mb417105[m HEAD@{6}: commit (initial): first commit
