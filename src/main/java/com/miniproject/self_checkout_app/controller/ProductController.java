@@ -1,8 +1,6 @@
 package com.miniproject.self_checkout_app.controller;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -33,6 +31,11 @@ public class ProductController {
 	
 	public ProductController(ProductService productService) {
 		this.productService=productService;
+	}
+	
+	@GetMapping(path="")
+	public String manageProducts() {
+		return "products";
 	}
 	
 	@PostMapping(path="/add")
@@ -80,31 +83,26 @@ public class ProductController {
 	    return "redirect:/admin?success=FileUploaded";
 	}
 	
+	@GetMapping(path = "/qr/{id}")
+	@ResponseBody
+	public ResponseEntity<byte[]> getQrCodePdf(@PathVariable("id") Long id) {
+	    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+	    try {
+	        // Generate QR code for the specified product's ID, throw an exception if not found
+	        Product p = productService.getProduct(id)
+	                .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
 
-    @GetMapping(path = "/get-qr")
-    @ResponseBody
-    public ResponseEntity<byte[]> getQrCodePdf() {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        List<Product> products = productService.getAllProducts();
+	        outputStream = QRCodeGenerator.generateQRCode(p);
 
-        if (products.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No products available".getBytes());
-        }
+	        // Set headers for file download
+	        HttpHeaders headers = new HttpHeaders();
+	        headers.add("Content-Disposition", "attachment; filename=qr_code.png");
 
-        try {
-            // Generate QR code for the first product's ID
-            String qrText = String.valueOf(products.get(1).getId());
-            outputStream = QRCodeGenerator.generateQRCode(qrText);
-
-            // Set headers for file download
-            HttpHeaders headers = new HttpHeaders();
-            headers.add("Content-Disposition", "attachment; filename=qr_code.png");
-
-            return new ResponseEntity<>(outputStream.toByteArray(), headers, HttpStatus.OK);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-        }
-    }
+	        return new ResponseEntity<>(outputStream.toByteArray(), headers, HttpStatus.OK);
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+	    }
+	}
 
 }

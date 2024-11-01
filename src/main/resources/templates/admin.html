@@ -1,244 +1,122 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Self Checkout</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* Custom Styles */
-        .transition {
-            transition: all 0.3s ease;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin - Self Checkout</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+/* Custom Styles */
+.transition {
+	transition: all 0.3s ease;
+}
 
-        /* Animate Modal */
-        .modal-enter {
-            transform: translateY(-20px);
-        }
+/* Animate Modal */
+.modal-enter {
+	transform: translateY(-20px);
+}
 
-        .modal-enter-active {
-            transform: translateY(0);
-        }
+.modal-enter-active {
+	transform: translateY(0);
+}
 
-        /* Custom Button Colors */
-        .bg-custom-green {
-            background-color: #38a169;
-        }
+/* Custom Button Colors */
+.bg-custom-green {
+	background-color: #38a169;
+}
 
-        .bg-custom-blue {
-            background-color: #3182ce;
-        }
+.bg-custom-blue {
+	background-color: #3182ce;
+}
 
-        .bg-custom-red {
-            background-color: #e53e3e;
-        }
-    </style>
+.bg-custom-red {
+	background-color: #e53e3e;
+}
+</style>
 </head>
 
 <body class="bg-gray-100">
+	<!-- Header with Logout and QR Code Button -->
+	<div
+		class="bg-custom-green text-white p-4 flex justify-between items-center">
+		<!-- Branding -->
+		<h1 class="text-2xl font-bold">Self Checkout</h1>
 
-    <!-- Header with Logout and QR Code Button -->
-    <div class="bg-custom-green text-white flex flex-col md:flex-row justify-between items-center p-4">
-        <div class="flex space-x-4">
-            <button 
-                id="openUserModal" 
-                class="bg-custom-blue hover:bg-blue-600 text-white py-2 px-4 rounded transition">
-                Add Authorized User
-            </button>
-            <button 
-                id="openQrModal" 
-                class="bg-custom-blue hover:bg-blue-600 text-white py-2 px-4 rounded transition">
-                Generate QR Code for All Products
-            </button>
-        </div>
+		<!-- Navbar Toggle for Mobile -->
+		<button id="menuToggle"
+			class="md:hidden text-white focus:outline-none">
+			<svg class="w-6 h-6" fill="none" stroke="currentColor"
+				viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round"
+					stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+            </svg>
+		</button>
+
+		<!-- Navbar Links -->
+		<nav id="navbar" class="hidden md:flex space-x-4 items-center">
+			<a href="/product"
+				class="bg-green-800 hover:bg-green-600 text-white py-2 px-4 rounded transition">
+				Manage Products </a> <a href="/logout"
+				class="bg-custom-red hover:bg-red-600 text-white py-2 px-4 rounded transition">
+				Logout </a>
+		</nav>
+	</div>
+
+	<!-- Mobile Menu -->
+	<div id="mobileMenu"
+		class="md:hidden bg-custom-green text-white space-y-2 p-4 hidden">
+
+		<a href="/product"
+			class="block bg-green-800 hover:bg-green-600 text-white py-2 px-4 rounded transition w-full text-center">
+			Manage Products </a> <a href="/logout"
+			class="block bg-custom-red hover:bg-red-600 text-white py-2 px-4 rounded transition w-full text-center">
+			Logout </a>
+	</div>
+
+
+	<!-- Modal for Adding Authorized User -->
+	<div id="userModal"
+		class=" bg-opacity-50 flex items-center justify-center">
+		<div
+			class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full modal-enter-active">
+			<h2 class="text-2xl font-bold mb-4">Add Authorized User</h2>
+
+			<form method="post" action="/admin/add" class="space-y-4">
+				<input type="hidden" th:name="${_csrf.parameterName}"
+					th:value="${_csrf.token}" /> <input type="email" name="username"
+					placeholder="Admin Email" required
+					class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+
+				<input type="password" name="password" placeholder="Password"
+					required
+					class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+
+				<select name="role" required
+					class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+					<option value="" disabled selected>Select Role</option>
+					<option value="Admin">Admin</option>
+					<option value="Manager">Manager</option>
+					<option value="Staff">Staff</option>
+				</select>
+
+				<div class="flex justify-between">
+
+					<button type="submit"
+						class="bg-custom-blue hover:bg-blue-600 text-white py-2 px-4 rounded transition">
+						Add User</button>
+				</div>
+			</form>
+		</div>
+	</div>
+
+	<script>
+        const menuToggle = document.getElementById('menuToggle');
+        const mobileMenu = document.getElementById('mobileMenu');
         
-        <h1 class="text-2xl font-bold mt-4 md:mt-0">Self Checkout</h1>
-
-        <a href="/logout" 
-           th:onclick="return confirm('Are you sure you want to log out?');" 
-           class="bg-custom-red hover:bg-red-600 text-white py-2 px-4 rounded transition mt-4 md:mt-0">
-            Logout
-        </a>
-    </div>
-
-    <!-- Main Content -->
-    <div class="max-w-lg mx-auto mt-10 p-6 bg-white shadow-lg rounded-lg">
-        <h2 class="text-xl font-semibold mb-6 text-center">Add Your Products Here</h2>
-
-        <form method="post" action="/product/add" class="space-y-4">
-            <!-- CSRF Token -->
-            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-
-            <input 
-                type="text" 
-                name="name" 
-                placeholder="Enter Product Name..." 
-                required 
-                class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500">
-
-            <input 
-                type="number" 
-                name="price" 
-                placeholder="Enter Price (in ₹)" 
-                required 
-                min="1" 
-                step="any" 
-                class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500">
-
-            <button 
-                type="submit" 
-                class="w-full bg-custom-green hover:bg-green-600 text-white py-3 rounded transition">
-                Add Product
-            </button>
-        </form>
-
-        <div class="mt-8 text-center">
-            <p class="font-semibold mb-2">Or Bulk Upload Products</p>
-            <form method="post" action="/product/upload" enctype="multipart/form-data" class="space-y-4">
-                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-
-                <input type="file" 
-                    name="products" 
-                    accept=".csv" 
-                    required 
-                    class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
-
-                <button 
-                    type="submit" 
-                    class="w-full bg-custom-blue hover:bg-blue-600 text-white py-2 rounded transition">
-                    Upload CSV
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal for Adding Authorized User -->
-    <div id="userModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center modal-enter">
-        <div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full modal-enter-active">
-            <h2 class="text-2xl font-bold mb-4">Add Authorized User</h2>
-
-            <form method="post" action="/admin/add" class="space-y-4">
-                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-
-                <input 
-                    type="email" 
-                    name="username" 
-                    placeholder="Admin Email" 
-                    required 
-                    class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
-
-                <input 
-                    type="password" 
-                    name="password" 
-                    placeholder="Password" 
-                    required 
-                    class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
-
-                <!-- Dropdown for Role Selection -->
-                <select 
-                    name="role" 
-                    required 
-                    class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="" disabled selected>Select Role</option>
-                    <option value="Admin">Admin</option>
-                    <option value="Manager">Manager</option>
-                    <option value="Staff">Staff</option>
-                </select>
-
-                <div class="flex justify-between">
-                    <button type="button" 
-                            id="closeUserModal" 
-                            class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded transition">
-                        Cancel
-                    </button>
-
-                    <button type="submit" 
-                            class="bg-custom-blue hover:bg-blue-600 text-white py-2 px-4 rounded transition">
-                        Add User
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal for Generating QR Code -->
-    <div id="qrModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center modal-enter">
-        <div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full modal-enter-active">
-            <h2 class="text-2xl font-bold mb-4">Generate QR Code</h2>
-            <p class="mb-4">Choose an option:</p>
-            <div class="flex justify-around mb-4">
-                <button id="generateAll" class="bg-custom-blue hover:bg-blue-600 text-white py-2 px-4 rounded transition">All Products</button>
-                <button id="generateById" class="bg-custom-blue hover:bg-blue-600 text-white py-2 px-4 rounded transition">By Product ID</button>
-            </div>
-
-            <div id="idInputContainer" class="hidden">
-                <input type="number" id="productId" placeholder="Enter Product ID" class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-
-            <button id="submitQr" class="bg-custom-green hover:bg-green-600 text-white py-2 px-4 rounded transition">Submit</button>
-            <button type="button" id="closeQrModal" class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded transition mt-4">Cancel</button>
-            <img src='/product/get-qr' height=200 width=200>
-        </div>
-    </div>
-
-    <script>
-        // JavaScript to toggle modals
-        const openUserModalButton = document.getElementById('openUserModal');
-        const closeUserModalButton = document.getElementById('closeUserModal');
-        const userModal = document.getElementById('userModal');
-
-        const openQrModalButton = document.getElementById('openQrModal');
-        const closeQrModalButton = document.getElementById('closeQrModal');
-        const qrModal = document.getElementById('qrModal');
-
-        const generateByIdButton = document.getElementById('generateById');
-        const idInputContainer = document.getElementById('idInputContainer');
-
-        openUserModalButton.addEventListener('click', () => {
-            userModal.classList.remove('hidden');
+        menuToggle.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
         });
 
-        closeUserModalButton.addEventListener('click', () => {
-            userModal.classList.add('hidden');
-        });
-
-        openQrModalButton.addEventListener('click', () => {
-            qrModal.classList.remove('hidden');
-        });
-
-        closeQrModalButton.addEventListener('click', () => {
-            qrModal.classList.add('hidden');
-            idInputContainer.classList.add('hidden'); // Hide ID input when modal is closed
-        });
-
-        generateByIdButton.addEventListener('click', () => {
-            idInputContainer.classList.remove('hidden');
-        });
-
-        const generateAllButton = document.getElementById('generateAll');
-        const submitQrButton = document.getElementById('submitQr');
-
-        generateAllButton.addEventListener('click', () => {
-            // Code to generate QR code for all products
-            console.log('Generating QR code for all products...');
-            //qrModal.classList.add('hidden'); // Close the modal after action
-
-            idInputContainer.classList.add('hidden');
-            
-        });
-
-        submitQrButton.addEventListener('click', () => {
-            const productId = document.getElementById('productId').value;
-            if (productId) {
-                // Code to generate QR code for specific product
-                console.log('Generating QR code for product ID:', productId);
-
-                idInputContainer.classList.add('hidden');
-                //qrModal.classList.add('hidden'); // Close the modal after action
-            } else {
-                alert('Please enter a valid Product ID');
-            }
-        });
     </script>
 </body>
 </html>
