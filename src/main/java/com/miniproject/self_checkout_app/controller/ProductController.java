@@ -1,7 +1,6 @@
 package com.miniproject.self_checkout_app.controller;
 
 import java.io.ByteArrayOutputStream;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -9,11 +8,11 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,7 +23,6 @@ import com.miniproject.self_checkout_app.utils.QRCodeGenerator;
 
 
 @Controller
-@RequestMapping("/product")
 public class ProductController {
 	
 	private ProductService productService;
@@ -33,26 +31,22 @@ public class ProductController {
 		this.productService=productService;
 	}
 	
-	@GetMapping(path="")
-	public String manageProducts() {
-		return "products";
-	}
 	
-	@PostMapping(path="/add")
+	@PostMapping(path="admin/product/add")
 	public String addProduct(@ModelAttribute Product product) {
-		Product p=productService.addProduct(product);
+		Product p=productService.save(product);
 		System.out.println(p);
-		return "redirect:/admin";
+		return "redirect:/admin/manage-products";
 	}
 	
-	@GetMapping(path="/get-all")
+	@GetMapping(path="/product/get-all")
 	@ResponseBody
 	public ResponseEntity<?> getAllProducts(){
 		List<Product> products=productService.getAllProducts();
 		return new ResponseEntity<>(products,HttpStatus.OK);
 	}
 	
-	@GetMapping(path="get/{id}")
+	@GetMapping(path="/product/get/{id}")
 	@ResponseBody
 	public ResponseEntity<?> getProduct(@PathVariable("id") Long productId) throws Exception{
 		Optional<Product> product=productService.getProduct(productId);
@@ -64,26 +58,55 @@ public class ProductController {
 		}
 	}
 	
-	@PostMapping(path = "/upload", consumes = "multipart/form-data")
+	@PostMapping(path = "admin/product/upload", consumes = "multipart/form-data")
 	public String bulkUpload(@RequestParam("products") MultipartFile products) {
-		List<Product> _products=new ArrayList<Product>();
 	    if (products.isEmpty()) {
 	        System.out.println("No file uploaded!");
-	        return "redirect:/admin?error=NoFileUploaded";
-	    }
-	    
-	    try {
-	    _products=productService.csvToProducts(products);
-	    productService.saveAll(_products);
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	        return "redirect:/admin?error=FileUploadFailed";
+	        return "redirect:/admin/manage-products?error=NoFileUploaded";
 	    }
 
-	    return "redirect:/admin?success=FileUploaded";
+	    List<Product> _products;
+	    try {
+	        _products = ProductService.csvToProducts(products); // Parse CSV to List<Product>
+	        
+	        for (Product product : _products) {
+	            // Check if the product exists by name
+	        	
+	            Optional<Product> existingProductOpt = productService.findByName(product.getName());
+	            
+	            if (existingProductOpt.isPresent()) {
+	                // Update the existing product with new values
+	                Product existingProduct = existingProductOpt.get();
+	                existingProduct.setPrice(product.getPrice()); // Update other fields as needed
+	                productService.save(existingProduct); // Save updated product
+	            } else {
+	                // Save new product
+	                productService.save(product);
+	            }
+	        }
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return "redirect:/admin/manage-products?error=FileUploadFailed";
+	    }
+
+	    return "redirect:/admin/manage-products?success=FileUploaded";
+	}
+
+	
+	@DeleteMapping(path = "/admin/product/delete/{id}")
+	@ResponseBody
+	public ResponseEntity<String> deleteProduct(@PathVariable("id") Long id){
+		productService.deleteProduct(id);
+		return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Product deleted");
 	}
 	
-	@GetMapping(path = "/qr/{id}")
+	@GetMapping("/admin/manage-products")
+	public String manageProducts() {
+		return "products";
+	}
+	
+	
+	@GetMapping(path = "/admin/product/qr/{id}")
 	@ResponseBody
 	public ResponseEntity<byte[]> getQrCodePdf(@PathVariable("id") Long id) {
 	    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();

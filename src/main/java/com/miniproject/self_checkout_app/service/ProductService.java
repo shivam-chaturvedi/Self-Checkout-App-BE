@@ -23,7 +23,7 @@ public class ProductService {
 		this.productRepository=productRepository;
 	}
 	
-	public Product addProduct(Product product) {
+	public Product save(Product product) {
 		return productRepository.save(product);
 	}
 	
@@ -39,7 +39,16 @@ public class ProductService {
 		return productRepository.saveAll(products);
 	}
 	
-	public List<Product> csvToProducts(MultipartFile file) {
+	public void deleteProduct(Long id) {
+		productRepository.deleteById(id);
+	}
+	
+	public Optional<Product> findByName(String name) {
+	    return productRepository.findByName(name);
+	}
+
+	
+	public static List<Product> csvToProducts(MultipartFile file) {
         List<Product> products = new ArrayList<>();
         
         try (InputStream is = file.getInputStream();
@@ -72,5 +81,7 @@ public class ProductService {
 
         return products;
     }
+
+	
 	
 }

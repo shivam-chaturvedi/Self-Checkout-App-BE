@@ -12,38 +12,37 @@ import org.springframework.security.web.SecurityFilterChain;
 
 import com.miniproject.self_checkout_app.service.UserService;
 
-
 @Configuration
 @EnableWebSecurity
-public class SecurityConfig{
+public class SecurityConfig {
 	
 	private final UserService userDetailService;
 	
 	public SecurityConfig(UserService userService) {
-		this.userDetailService=userService;
+		this.userDetailService = userService;
 	}
-	
 	
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-        .authorizeHttpRequests(auth ->
-        auth.requestMatchers("/signup").permitAll()
-        .requestMatchers("/css/**").permitAll()
-        .requestMatchers("/admin").hasRole("ADMIN")
-        .requestMatchers("/product").hasRole("ADMIN")
-        .requestMatchers("/product/**").authenticated()
-        .anyRequest().authenticated()
+        .csrf(csrf -> 
+        csrf.ignoringRequestMatchers("/admin/product/delete/**")) // Exempt CSRF for delete product
+        .authorizeHttpRequests(auth -> 
+            auth.requestMatchers("/signup").permitAll()
+            .requestMatchers("/css/**").permitAll()
+            .requestMatchers("/admin/**").hasRole("ADMIN")
+            .anyRequest().authenticated()
         )
-        .formLogin(form->form.loginPage("/login").permitAll())
+        .formLogin(form -> form
+            .loginPage("/login").permitAll())
         .logout(logout -> 
-        logout.logoutUrl("/logout")
-              .logoutSuccessUrl("/login?logout") // Redirect to login with a logout indicator
-              .invalidateHttpSession(true) // Invalidate session
-              .clearAuthentication(true) // Clear authentication info
-              .deleteCookies("JSESSIONID") // Optional: delete session cookie
-        	);
-        
+            logout.logoutUrl("/logout")
+                  .logoutSuccessUrl("/login?logout") // Redirect to login with a logout indicator
+                  .invalidateHttpSession(true) // Invalidate session
+                  .clearAuthentication(true) // Clear authentication info
+                  .deleteCookies("JSESSIONID") // Optional: delete session cookie
+        );
+
 		return http.build();
 	}
 	
@@ -54,11 +53,12 @@ public class SecurityConfig{
 	
 	@Bean
 	public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
-		AuthenticationManagerBuilder authenticationManagerBuilder=http.getSharedObject(AuthenticationManagerBuilder.class);
+		AuthenticationManagerBuilder authenticationManagerBuilder = 
+            http.getSharedObject(AuthenticationManagerBuilder.class);
 		
-		authenticationManagerBuilder.userDetailsService(userDetailService).passwordEncoder(passwordEncoder());
+		authenticationManagerBuilder.userDetailsService(userDetailService)
+            .passwordEncoder(passwordEncoder());
 		
 		return authenticationManagerBuilder.build();
 	}
-	
 }
