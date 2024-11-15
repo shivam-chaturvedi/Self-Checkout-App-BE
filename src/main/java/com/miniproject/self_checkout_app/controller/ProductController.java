@@ -1,20 +1,22 @@
 package com.miniproject.self_checkout_app.controller;
 
 import java.io.ByteArrayOutputStream;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.miniproject.self_checkout_app.model.Product;
@@ -22,7 +24,7 @@ import com.miniproject.self_checkout_app.service.ProductService;
 import com.miniproject.self_checkout_app.utils.QRCodeGenerator;
 
 
-@Controller
+@RestController
 public class ProductController {
 	
 	private ProductService productService;
@@ -32,22 +34,41 @@ public class ProductController {
 	}
 	
 	
-	@PostMapping(path="admin/product/add")
-	public String addProduct(@ModelAttribute Product product) {
-		Product p=productService.save(product);
-		System.out.println(p);
-		return "redirect:/admin/manage-products";
+	@PostMapping(path="/admin/add/product")
+	public ResponseEntity<?> addProduct(@RequestBody Product product) {
+		Map<String, Object> resMsg=new HashMap<String, Object>();
+		try {
+			Product p=productService.save(product);			
+			resMsg.put("success", p);
+			return ResponseEntity.ok(resMsg);
+		}
+		catch(Exception e) {
+			resMsg.put("error", e.getMessage());
+			return ResponseEntity.badRequest().body(resMsg);
+		}
+	}
+	
+	@PutMapping(path="/admin/update/product")
+	public ResponseEntity<?> updateProduct(@RequestBody Product product) {
+		Map<String, Object> resMsg=new HashMap<String, Object>();
+		try {
+			Product p=productService.save(product);			
+			resMsg.put("success", p);
+			return ResponseEntity.ok(resMsg);
+		}
+		catch(Exception e) {
+			resMsg.put("error", e.getMessage());
+			return ResponseEntity.badRequest().body(resMsg);
+		}
 	}
 	
 	@GetMapping(path="/product/get-all")
-	@ResponseBody
 	public ResponseEntity<?> getAllProducts(){
 		List<Product> products=productService.getAllProducts();
 		return new ResponseEntity<>(products,HttpStatus.OK);
 	}
 	
 	@GetMapping(path="/product/get/{id}")
-	@ResponseBody
 	public ResponseEntity<?> getProduct(@PathVariable("id") Long productId) throws Exception{
 		Optional<Product> product=productService.getProduct(productId);
 		if(product.isEmpty()) {
@@ -58,6 +79,7 @@ public class ProductController {
 		}
 	}
 	
+	@Deprecated
 	@PostMapping(path = "admin/product/upload", consumes = "multipart/form-data")
 	public String bulkUpload(@RequestParam("products") MultipartFile products) {
 	    if (products.isEmpty()) {
@@ -72,7 +94,7 @@ public class ProductController {
 	        for (Product product : _products) {
 	            // Check if the product exists by name
 	        	
-	            Optional<Product> existingProductOpt = productService.findByName(product.getName());
+	            Optional<Product> existingProductOpt = productService.getProduct(product.getName());
 	            
 	            if (existingProductOpt.isPresent()) {
 	                // Update the existing product with new values
@@ -94,21 +116,14 @@ public class ProductController {
 
 	
 	@DeleteMapping(path = "/admin/product/delete/{id}")
-	@ResponseBody
 	public ResponseEntity<String> deleteProduct(@PathVariable("id") Long id){
 		productService.deleteProduct(id);
 		return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Product deleted");
 	}
 	
-	@GetMapping("/admin/manage-products")
-	public String manageProducts() {
-		return "products";
-	}
-	
 	
 	@GetMapping(path = "/admin/product/qr/{id}")
-	@ResponseBody
-	public ResponseEntity<byte[]> getQrCodePdf(@PathVariable("id") Long id) {
+	public ResponseEntity<byte[]> getQrCode(@PathVariable("id") Long id) {
 	    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 	    try {
 	        // Generate QR code for the specified product's ID, throw an exception if not found

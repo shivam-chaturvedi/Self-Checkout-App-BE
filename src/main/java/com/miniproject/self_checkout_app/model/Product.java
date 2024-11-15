@@ -5,6 +5,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -16,15 +18,36 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Product extends CreatedAtUpdatedAt {
-	
-	@Id
-	@Column(name="product_id")
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
-	@Column(unique = true,length = 250,nullable = false)
-	private String name;
-	
-	@Column(nullable = false)
-	private Double price;
-	
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(unique = true, length = 250, nullable = false)
+    private String name;
+    
+    @Column(nullable = false)
+    private Double price;
+    
+    @Column(nullable = false, length = 250)
+    private String category;
+    
+    @Column(nullable = false)
+    private Long quantity = 0L;
+    
+    private boolean isAvailable = false;
+
+    @PrePersist
+    private void onProductCreate() {
+        setAvailabilityBasedOnQuantity();
+    }
+
+    @PreUpdate
+    private void onProductUpdate() {
+        setAvailabilityBasedOnQuantity();
+    }
+
+    private void setAvailabilityBasedOnQuantity() {
+        this.isAvailable = this.quantity > 0;
+    }
 }

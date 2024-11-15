@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class User {
 	@Id
-	private String username;
+	private String email;
 	
 	@Column(nullable = false)
 	private String password;

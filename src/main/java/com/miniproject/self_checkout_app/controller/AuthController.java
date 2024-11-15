@@ -1,54 +1,82 @@
 package com.miniproject.self_checkout_app.controller;
 
-import org.springframework.stereotype.Controller;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.miniproject.self_checkout_app.model.User;
 import com.miniproject.self_checkout_app.service.UserService;
+import com.miniproject.self_checkout_app.utils.JwtUtil;
 
-@Controller
+@RestController
 public class AuthController {
-	
+
 	private final UserService userService;
-	
-	public AuthController(UserService userService) {
-		this.userService=userService;
+	private final JwtUtil jwtUtil;
+
+	public AuthController(UserService userService,JwtUtil jwtUtil) {
+		this.userService = userService;
+		this.jwtUtil=jwtUtil;
 	}
-	
-	@GetMapping("/signup")
-	public String signup() {
-		return "signup";
-	}
-	
+
 	@PostMapping("/signup")
-	public String signup(@ModelAttribute User user) {
-	    try {
-	        userService.signupNewUser(user);
-	        return "redirect:/login";  // Redirect to the login page
-	    } catch (Exception e) {
-	        return "redirect:/signup?error=" + e.getMessage();  // Redirect back to signup with an error message
-	    }
+	public ResponseEntity<?> signup(@RequestBody User user) {
+		Map<String, Object> responseMsg = new HashMap<String, Object>();
+		try {
+			// Call service to signup new user
+			userService.signupNewUser(user);
+
+			// Return response with CREATED status (201)
+			responseMsg.put("success", user);
+			return ResponseEntity.status(HttpStatus.CREATED).body(responseMsg);
+		} catch (Exception e) {
+			// Return BAD_REQUEST status (400) with error message
+			responseMsg.put("error", e.getMessage());
+			return ResponseEntity.badRequest().body(responseMsg);
+		}
 	}
-	
+
 	@PostMapping("/admin/add")
 	public String addUser(@ModelAttribute User user) {
 		userService.signupNewUser(user);
 		return "redirect:/admin";
 	}
-	
-	@GetMapping("/login")
-	public String login() {
-		return "login";
+
+	@PostMapping("/login")
+	public ResponseEntity<?> login(@RequestBody User user) {
+		Map<String, Object> resMsg = new HashMap<String, Object>();
+		if (userService.authenticateUser(user)) {
+			String token = jwtUtil.generateToken(user.getEmail());
+			resMsg.put("success", token);
+			return ResponseEntity.ok(resMsg);
+		}
+		resMsg.put("error", "Username or Password is invalid !");
+		return ResponseEntity.badRequest().body(resMsg);
+
 	}
 	
-	
-	
-	@GetMapping("/logout")
-	public String logout() {
-		return "logout";
+	@GetMapping(path="/verify-token")
+	public ResponseEntity<?> verifyJwtToken(@RequestParam("token") String token){
+		Map<String, Object> resMsg = new HashMap<>();
+	    if (token == null || token.isEmpty()) {;
+	        resMsg.put("error", "Token is required");
+	        return ResponseEntity.badRequest().body(resMsg);
+	    }
+	    if (jwtUtil.validateToken(token)) {
+	        resMsg.put("success", "Token is valid !");
+	        return ResponseEntity.ok(resMsg);
+	    } else {
+	        resMsg.put("error", "Token invalid!");
+	        return ResponseEntity.badRequest().body(resMsg);
+	    }
 	}
-	
-	
 
 }

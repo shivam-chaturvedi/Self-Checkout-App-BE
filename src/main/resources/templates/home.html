@@ -5,7 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Self Checkout App</title>
 
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- QR Code Scanner Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+    
+    <!-- Beep Sound -->
+    <audio id="beep-sound" src="beep.wav"></audio>
+    
 </head>
 
 <body class="bg-gray-100 min-h-screen flex flex-col">
@@ -13,20 +21,13 @@
     <!-- Header/Navbar -->
     <nav class="bg-green-500 p-4 shadow-lg">
         <div class="container mx-auto flex items-center justify-between">
-            <!-- Logo / Title -->
             <h1 class="text-white text-2xl font-bold">Self Checkout</h1>
 
-            <!-- Navigation Links -->
             <div class="hidden md:flex space-x-4">
-                <a href="/admin" class="text-white hover:bg-green-600 px-4 py-2 rounded transition">
-                    Admin
-                </a>
-                <a href="/logout" class="text-white hover:bg-red-600 px-4 py-2 rounded transition">
-                    Logout
-                </a>
+                <a href="/admin" class="text-white hover:bg-green-600 px-4 py-2 rounded transition">Admin</a>
+                <a href="/logout" class="text-white hover:bg-red-600 px-4 py-2 rounded transition">Logout</a>
             </div>
 
-            <!-- Mobile Menu Button -->
             <button id="menu-toggle" class="md:hidden text-white focus:outline-none">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
@@ -49,24 +50,129 @@
         </select>
 
         <div class="reader mt-8 border-2 border-dashed border-green-500 rounded-lg p-10 flex items-center justify-center">
-            <p class="text-gray-500">QR Code Reader</p>
+            <div id="qr-reader" style="width: 100%;"></div>
+            <p id="scanned-result" class="text-gray-500 mt-4 hidden"></p>
         </div>
 
         <h3 class="text-center text-lg font-semibold mt-8">Scanned Items</h3>
-        <ul id="list" class="mx-auto mt-4 w-1/2 max-w-md space-y-2">
-            <!-- Items will be dynamically added here -->
-        </ul>
+
+        <!-- Scanned Items Table -->
+        <div class="mt-4 overflow-x-auto">
+            <table class="table-auto w-full text-left bg-white shadow rounded-lg">
+                <thead>
+                    <tr class="bg-gray-200 text-gray-700 uppercase text-sm leading-normal">
+                        <th class="py-3 px-6 text-left">Product</th>
+                        <th class="py-3 px-6 text-left">Quantity</th>
+                        <th class="py-3 px-6 text-left">Price</th>
+                        <th class="py-3 px-6 text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="item-table-body">
+                    <!-- Dynamic rows will be added here -->
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <script>
-        // Toggle mobile menu
-        const menuToggle = document.getElementById('menu-toggle');
-        const mobileMenu = document.getElementById('mobile-menu');
+        const cameraSelect = document.getElementById('camera-select');
+        const itemTableBody = document.getElementById('item-table-body');
+        const beepSound = document.getElementById('beep-sound');
+        let selectedCameraId;
+        let qrCodeReader;
+        let lastScanTime = 0;
 
-        menuToggle.addEventListener('click', () => {
-            mobileMenu.classList.toggle('hidden');
+        // Store items with quantity and price
+        const items = {};
+
+        // Load available cameras
+        function loadCameras() {
+            Html5Qrcode.getCameras().then(cameras => {
+                cameras.forEach((camera, index) => {
+                    const option = document.createElement('option');
+                    option.value = camera.id;
+                    option.textContent = camera.label || `Camera ${index + 1}`;
+                    cameraSelect.appendChild(option);
+                });
+            }).catch(err => {
+                console.error("Error in fetching cameras:", err);
+            });
+        }
+
+        // Start QR Code scanning
+        function startScanner(cameraId) {
+            qrCodeReader = new Html5Qrcode("qr-reader");
+
+            qrCodeReader.start(
+                cameraId,
+                { fps: 10, qrbox: 250 },
+                qrCodeMessage => {
+                    const currentTime = Date.now();
+                    if (currentTime - lastScanTime > 1000) { // 1 second debounce
+                        beepSound.play();
+                        addItemToCart(qrCodeMessage);
+                        lastScanTime = currentTime;
+                    }
+                },
+                errorMessage => {
+                    console.warn("Scanning failed:", errorMessage);
+                }
+            ).catch(err => {
+                console.error("Error in starting scanner:", err);
+            });
+        }
+
+        // Add or update scanned item
+        function addItemToCart(item) {
+            if (items[item]) {
+                items[item].quantity += 1;
+            } else {
+                items[item] = { name: item, quantity: 1, price: (Math.random() * (100 - 10) + 10).toFixed(2) }; // Random price between 10 and 100
+            }
+            renderItemTable();
+        }
+
+        // Render items in the table
+        function renderItemTable() {
+            itemTableBody.innerHTML = '';
+
+            for (let item in items) {
+                const row = document.createElement('tr');
+                row.className = "border-b border-gray-200 hover:bg-gray-100";
+
+                row.innerHTML = `
+                    <td class="py-3 px-6 text-left">${items[item].name}</td>
+                    <td class="py-3 px-6 text-left">${items[item].quantity}</td>
+                    <td class="py-3 px-6 text-left">$${items[item].price}</td>
+                    <td class="py-3 px-6 text-center">
+                        <button onclick="deleteItem('${item}')" class="bg-red-500 text-white px-3 py-1 rounded">Remove</button>
+                    </td>
+                `;
+
+                itemTableBody.appendChild(row);
+            }
+        }
+
+        // Decrease quantity or remove item
+        function deleteItem(item) {
+            if (items[item].quantity > 1) {
+                items[item].quantity -= 1;
+            } else {
+                delete items[item];
+            }
+            renderItemTable();
+        }
+
+        // Event listener for camera selection
+        cameraSelect.addEventListener('change', () => {
+            selectedCameraId = cameraSelect.value;
+            if (selectedCameraId) {
+                startScanner(selectedCameraId);
+            }
         });
-    </script>
 
+        // Load available cameras on page load
+        loadCameras();
+    </script>
 </body>
 </html>

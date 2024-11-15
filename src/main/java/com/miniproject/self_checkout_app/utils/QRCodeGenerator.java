@@ -13,7 +13,6 @@ import java.io.IOException;
 
 public class QRCodeGenerator {
 
-
     public static ByteArrayOutputStream generateQRCode(Product p) throws WriterException, IOException {
         QRCodeWriter qrCodeWriter = new QRCodeWriter();
         BitMatrix bitMatrix = qrCodeWriter.encode(String.valueOf(p.getId()), BarcodeFormat.QR_CODE, 200, 200);

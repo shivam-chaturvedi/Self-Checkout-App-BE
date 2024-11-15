@@ -43,10 +43,18 @@ public class ProductService {
 		productRepository.deleteById(id);
 	}
 	
-	public Optional<Product> findByName(String name) {
+	public Optional<Product> getProduct(String name) {
 	    return productRepository.findByName(name);
 	}
-
+	
+	public List<Product> getProductsByCategory(String category){
+		return productRepository.findByCategory(category);
+	}
+	
+	public List<Product> getAvailableProducts(boolean value){
+		return productRepository.findByIsAvailable(value);
+	}
+	
 	
 	public static List<Product> csvToProducts(MultipartFile file) {
         List<Product> products = new ArrayList<>();
