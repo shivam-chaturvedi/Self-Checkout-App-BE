@@ -9,5 +9,4 @@ public class SelfCheckoutAppApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(SelfCheckoutAppApplication.class, args);
 	}
-
 }

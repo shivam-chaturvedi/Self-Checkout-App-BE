@@ -59,7 +59,7 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Configure CORS as per your need
             .authorizeHttpRequests(auth -> 
                 auth.requestMatchers("/signup", "/login", "/verify-token").permitAll() // Allow signup/login without authentication
-                    .requestMatchers("/admin").hasRole("ADMIN")
+                    .requestMatchers("/admin/**").hasRole("ADMIN")
                     .requestMatchers("/css/**").permitAll()
                     .anyRequest().authenticated() // Authenticate other requests
             )

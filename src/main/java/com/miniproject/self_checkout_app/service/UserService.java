@@ -1,6 +1,12 @@
 package com.miniproject.self_checkout_app.service;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -39,6 +45,29 @@ public class UserService implements UserDetailsService {
 		user.setPassword(passwordEncoder().encode(user.getPassword()).trim());
 		return userRepository.save(user);
 	}
+	
+
+	public User updateUser(User user) {
+		user.setRole(user.getRole().toUpperCase());
+		user.setPassword(passwordEncoder().encode(user.getPassword()).trim());
+		return userRepository.save(user);
+	}
+	
+	public void removeUser(String email) {
+		try {
+			Optional<User> user=userRepository.findByEmail(email);
+			if(user.isEmpty()) {
+				throw new Exception("User Not Found!");
+			}
+			userRepository.delete(user.get());
+		}
+		catch(Exception e) {
+			System.err.println(e.getMessage());
+		}
+	}
+	
+	
+	
 
 	public boolean authenticateUser(User user) {
 		try {
@@ -54,6 +83,8 @@ public class UserService implements UserDetailsService {
 		}
 
 	}
+	
+	
 
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -64,6 +95,10 @@ public class UserService implements UserDetailsService {
 				.password(user.getPassword()).roles(user.getRole()).build();
 
 		return userDetails;
+	}
+
+	public List<User> getAllUsers() {
+		return userRepository.findAll();
 	}
 
 }

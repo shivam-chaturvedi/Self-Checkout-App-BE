@@ -26,7 +26,7 @@ public class JwtUtil {
 	private final String SECRET_KEY_STRING = "yourhSJKSHDJKSHDKJSAHDKJSAHJKASHJKjcnckadkadjkadsjdlka";
 
 	// JWT expiration time (default is 1 hour)
-	private long expirationTime = 1000 * 60 * 60;
+	private long expirationTime = 1000 * 60 * 60*24;
 
 	// Decode the Base64 string and store it as a Key object
 	private Key getSecretKey() {

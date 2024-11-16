@@ -57,38 +57,47 @@ public class ProductService {
 	
 	
 	public static List<Product> csvToProducts(MultipartFile file) {
-        List<Product> products = new ArrayList<>();
-        
-        try (InputStream is = file.getInputStream();
-             BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
-             
-            String line;
-            // Skip the header if present
-            boolean isFirstLine = true;
-            while ((line = reader.readLine()) != null) {
-                if (isFirstLine) {
-                    isFirstLine = false;
-                    continue; // Skip header line
-                }
-                
-                String[] fields = line.split(",");
-                if (fields.length == 2) { // Ensure name and price are present
-                    String name = fields[0].trim();
-                    double price = Double.parseDouble(fields[1].trim());
+	    List<Product> products = new ArrayList<>();
 
-                    Product product = new Product();
-                    product.setName(name);
-                    product.setPrice(price);
-                    
-                    products.add(product);
-                }
-            }
-        } catch (IOException | NumberFormatException e) {
-            e.printStackTrace(); // Log error for debugging
-        }
+	    try (InputStream is = file.getInputStream();
+	         BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
+	         
+	        String line;
+	        boolean isFirstLine = true;
+	        while ((line = reader.readLine()) != null) {
+	            if (isFirstLine) {
+	                isFirstLine = false;
+	                continue; // Skip header line
+	            }
+	            
+	            String[] fields = line.split(",");
+	            if (fields.length >= 2) { // Ensure at least name and price are present
+	                try {
+	                    String name = fields[0].trim();
+	                    double price = Double.parseDouble(fields[1].trim());
+	                    String category = fields.length > 2 ? fields[2].trim() : "Uncategorized";
+	                    long quantity = fields.length > 3 ? Long.parseLong(fields[3].trim()) : 0;
 
-        return products;
-    }
+	                    Product product = new Product();
+	                    product.setName(name);
+	                    product.setPrice(price);
+	                    product.setCategory(category);
+	                    product.setQuantity(quantity);
+	                    product.setAvailable(quantity > 0); // Set availability
+	                    
+	                    products.add(product);
+	                } catch (NumberFormatException ex) {
+	                    System.err.println("Skipping invalid row: " + line);
+	                }
+	            }
+	        }
+	    } catch (IOException e) {
+	        e.printStackTrace(); // Replace with proper logging in production
+	    }
+
+	    return products;
+	}
+
 
 	
 	
