@@ -3,6 +3,7 @@ package com.miniproject.self_checkout_app.service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import org.springframework.context.annotation.Bean;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import com.miniproject.self_checkout_app.model.User;
 import com.miniproject.self_checkout_app.repository.UserRepository;
+import com.miniproject.self_checkout_app.utils.JwtUtil;
 
 @Service
 public class UserService implements UserDetailsService {
@@ -46,6 +48,25 @@ public class UserService implements UserDetailsService {
 		return userRepository.save(user);
 	}
 	
+	/**
+	 * 
+	 * @param username
+	 * @return true if user is admin
+	 * else false
+	 */
+	public boolean isUserAdmin(String username) {
+		try {
+			User u=userRepository.findByEmail(username).get();
+			if(u.getRole().equals("ADMIN")) {
+				return true;
+			}
+			return false;
+		}
+		catch(Exception e) {
+			return false;
+		}
+	}
+	
 
 	public User updateUser(User user) {
 		user.setRole(user.getRole().toUpperCase());
@@ -73,7 +94,7 @@ public class UserService implements UserDetailsService {
 		try {
 			User user1 = userRepository.findByEmail(user.getEmail()).orElseThrow(
 					() -> new UsernameNotFoundException("User Not Found with username " + user.getEmail()));
-			if (passwordEncoder().matches(user.getPassword(), user1.getPassword())) {
+			if (passwordEncoder().matches(user.getPassword().trim(), user1.getPassword())) {
 				return true;
 			} else {
 				return false;
@@ -84,8 +105,9 @@ public class UserService implements UserDetailsService {
 
 	}
 	
-	
-
+	/**
+	 * get userDeatils from username
+	 */
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 		User user = userRepository.findByEmail(username)
@@ -99,6 +121,18 @@ public class UserService implements UserDetailsService {
 
 	public List<User> getAllUsers() {
 		return userRepository.findAll();
+	}
+	
+	/**
+	 * gets user by username
+	 * @param token
+	 * @param jwtUtil
+	 * @return
+	 * @throws NoSuchElementException
+	 */
+	public User getUserFromUsername(String username) throws NoSuchElementException {
+		User user=userRepository.findByEmail(username).get();			
+		return user;
 	}
 
 }

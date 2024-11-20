@@ -131,8 +131,8 @@ public class ProductController {
 		return ResponseEntity.status(HttpStatus.OK).body("Product deleted");
 	}
 
-	@GetMapping(path = "/admin/product/qr/{id}")
-	public ResponseEntity<byte[]> getQrCode(@PathVariable("id") Long id) {
+	@GetMapping(path = "/product/qr/{id}")
+	public ResponseEntity<?> getQrCode(@PathVariable("id") Long id) {
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		try {
 			// Generate QR code for the specified product's ID, throw an exception if not
@@ -140,16 +140,16 @@ public class ProductController {
 			Product p = productService.getProduct(id)
 					.orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
 
-			outputStream = QRCodeGenerator.generateQRCode(p);
+			outputStream = QRCodeGenerator.generateBarcode(p.getId().toString());
 
 			// Set headers for file download
 			HttpHeaders headers = new HttpHeaders();
-			headers.add("Content-Disposition", "attachment; filename=qr_code.png");
+			headers.add("Content-Disposition", "attachment; filename=qr_code_"+id+".png");
 
 			return new ResponseEntity<>(outputStream.toByteArray(), headers, HttpStatus.OK);
 		} catch (Exception e) {
 			e.printStackTrace();
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
 		}
 	}
 

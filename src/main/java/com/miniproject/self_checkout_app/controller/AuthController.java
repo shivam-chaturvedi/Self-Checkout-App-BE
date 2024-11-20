@@ -44,15 +44,11 @@ public class AuthController {
 		}
 	}
 
-	@PostMapping("/admin/add")
-	public String addUser(@ModelAttribute User user) {
-		userService.signupNewUser(user);
-		return "redirect:/admin";
-	}
 
 	@PostMapping("/login")
 	public ResponseEntity<?> login(@RequestBody User user) {
 		Map<String, Object> resMsg = new HashMap<String, Object>();
+		
 		if (userService.authenticateUser(user)) {
 			String token = jwtUtil.generateToken(user.getEmail());
 			resMsg.put("success", token);
@@ -71,7 +67,12 @@ public class AuthController {
 	        return ResponseEntity.badRequest().body(resMsg);
 	    }
 	    if (jwtUtil.validateToken(token)) {
+	    	boolean isAdmin=userService.isUserAdmin(jwtUtil.extractUsername(token));
+	    	String uname=jwtUtil.extractUsername(token);
+	    	User user=userService.getUserFromUsername(uname);
 	        resMsg.put("success", "Token is valid !");
+	        resMsg.put("isAdmin", isAdmin);
+	        resMsg.put("user", user);
 	        return ResponseEntity.ok(resMsg);
 	    } else {
 	        resMsg.put("error", "Token invalid!");

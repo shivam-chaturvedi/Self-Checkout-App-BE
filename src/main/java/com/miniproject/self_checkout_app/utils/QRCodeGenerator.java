@@ -1,33 +1,46 @@
 package com.miniproject.self_checkout_app.utils;
 
 import com.google.zxing.BarcodeFormat;
+import com.google.zxing.EncodeHintType;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
-import com.google.zxing.qrcode.QRCodeWriter;
-import com.miniproject.self_checkout_app.model.Product;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class QRCodeGenerator {
 
-    public static ByteArrayOutputStream generateQRCode(Product p) throws WriterException, IOException {
-        QRCodeWriter qrCodeWriter = new QRCodeWriter();
-        BitMatrix bitMatrix = qrCodeWriter.encode(String.valueOf(p.getId()), BarcodeFormat.QR_CODE, 200, 200);
+    public static ByteArrayOutputStream generateBarcode(String barcodeContent) throws WriterException, IOException {
+        // Configure Barcode generation
+        Map<EncodeHintType, Object> hints = new HashMap<>();
+        hints.put(EncodeHintType.CHARACTER_SET, "UTF-8");
 
-        BufferedImage image = new BufferedImage(bitMatrix.getWidth(), bitMatrix.getHeight(), BufferedImage.TYPE_INT_RGB);
-        for (int x = 0; x < bitMatrix.getWidth(); x++) {
-            for (int y = 0; y < bitMatrix.getHeight(); y++) {
-                image.setRGB(x, y, bitMatrix.get(x, y) ? 0x000000 : 0xFFFFFF); // Set black or white pixels
-            }
-        }
-        // Convert BufferedImage to a File object in memory
+        // Use CODE_128 format for barcodes
+        BarcodeFormat barcodeFormat = BarcodeFormat.CODE_128;
+
+        // Create a barcode
+        com.google.zxing.Writer barcodeWriter = new com.google.zxing.MultiFormatWriter();
+        BitMatrix bitMatrix = barcodeWriter.encode(barcodeContent, barcodeFormat, 600, 200, hints);
+
+        // Convert BitMatrix to BufferedImage
+        BufferedImage image = MatrixToImageWriter.toBufferedImage(bitMatrix);
+
+        // Write the image to ByteArrayOutputStream
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ImageIO.write(image, "png", baos);
         baos.flush();
 
-        return baos; 
+        // Optionally save the image to inspect it
+        File outputfile = new File("Barcode.png");
+        ImageIO.write(image, "png", outputfile);
+
+        return baos; // Return PNG image as a byte array
     }
+
 }
