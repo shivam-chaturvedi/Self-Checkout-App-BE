@@ -10,4 +10,3 @@ public class SelfCheckoutAppApplication {
 		SpringApplication.run(SelfCheckoutAppApplication.class, args);
 	}
 }
-
