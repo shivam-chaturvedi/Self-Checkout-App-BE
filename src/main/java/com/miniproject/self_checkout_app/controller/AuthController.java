@@ -6,7 +6,6 @@ import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -51,7 +50,9 @@ public class AuthController {
 		
 		if (userService.authenticateUser(user)) {
 			String token = jwtUtil.generateToken(user.getEmail());
+			User u=userService.getUserFromUsername(user.getEmail());
 			resMsg.put("success", token);
+			resMsg.put("user", u);
 			return ResponseEntity.ok(resMsg);
 		}
 		resMsg.put("error", "Username or Password is invalid !");
@@ -67,6 +68,7 @@ public class AuthController {
 	        return ResponseEntity.badRequest().body(resMsg);
 	    }
 	    if (jwtUtil.validateToken(token)) {
+	    	System.out.println("verify token ");
 	    	boolean isAdmin=userService.isUserAdmin(jwtUtil.extractUsername(token));
 	    	String uname=jwtUtil.extractUsername(token);
 	    	User user=userService.getUserFromUsername(uname);

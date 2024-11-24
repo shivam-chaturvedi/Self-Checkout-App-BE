@@ -58,7 +58,7 @@ public class UserController {
 		}
 	}
 	
-	@DeleteMapping("admin/user/delete/{email}")
+	@DeleteMapping("/admin/user/delete/{email}")
 	public ResponseEntity<?> deleteUser(@PathVariable("email") String email){
 		Map<String, Object> resMsg=new HashMap<String, Object>();
 		try {
@@ -71,5 +71,20 @@ public class UserController {
 			return ResponseEntity.badRequest().body(resMsg);
 		}
 	}
+	
+	@GetMapping(path="/user/{email}")
+	public ResponseEntity<?> getUser(@PathVariable("email") String email){
+		Map<String, Object> resMsg=new HashMap<String, Object>();
+		try {
+			User u=userService.getUserFromUsername(email);
+			resMsg.put("user", u);
+			return ResponseEntity.ok(resMsg);
+		}
+		catch(Exception e) {
+			resMsg.put("error", e.getMessage());
+			return ResponseEntity.badRequest().body(resMsg);
+		}
+	}
+	
 	
 }

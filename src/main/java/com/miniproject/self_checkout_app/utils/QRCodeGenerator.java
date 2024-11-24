@@ -5,11 +5,9 @@ import com.google.zxing.EncodeHintType;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
-
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -35,10 +33,6 @@ public class QRCodeGenerator {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ImageIO.write(image, "png", baos);
         baos.flush();
-
-        // Optionally save the image to inspect it
-        File outputfile = new File("Barcode.png");
-        ImageIO.write(image, "png", outputfile);
 
         return baos; // Return PNG image as a byte array
     }

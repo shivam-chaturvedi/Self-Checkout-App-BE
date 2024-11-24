@@ -1,13 +1,10 @@
 package com.miniproject.self_checkout_app.service;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import org.springframework.context.annotation.Bean;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -17,7 +14,6 @@ import org.springframework.stereotype.Service;
 
 import com.miniproject.self_checkout_app.model.User;
 import com.miniproject.self_checkout_app.repository.UserRepository;
-import com.miniproject.self_checkout_app.utils.JwtUtil;
 
 @Service
 public class UserService implements UserDetailsService {
