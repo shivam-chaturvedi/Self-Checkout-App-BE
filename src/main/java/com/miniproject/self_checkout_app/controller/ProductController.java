@@ -69,9 +69,11 @@ public class ProductController {
 
 	@GetMapping(path = "/product/get/{id}")
 	public ResponseEntity<?> getProduct(@PathVariable("id") Long productId) throws Exception {
+		Map<String,Object> res=new HashMap<String, Object>();
 		Optional<Product> product = productService.getProduct(productId);
 		if (product.isEmpty()) {
-			return ResponseEntity.badRequest().body("\"Product with id=" + productId + " not found !\"");
+			res.put("error", "Product with Id = " + productId + " not found !");
+			return ResponseEntity.badRequest().body(res);
 		} else {
 			return new ResponseEntity<>(product, HttpStatus.OK);
 		}
@@ -79,6 +81,11 @@ public class ProductController {
 	
 	
 	
+	/**
+	 * 	this method is for bulk upload of products , it is not active for now
+	 * @param products
+	 * @return
+	 */
 	@Deprecated
 	@PostMapping(path = "admin/product/upload", consumes = "multipart/form-data")
 	public ResponseEntity<?> bulkUpload(@RequestParam("products") MultipartFile products) {
@@ -144,7 +151,7 @@ public class ProductController {
 
 			// Set headers for file download
 			HttpHeaders headers = new HttpHeaders();
-			headers.add("Content-Disposition", "attachment; filename=qr_code_"+id+".png");
+			headers.add("Content-Disposition", "attachment; filename=qr_code_"+p.getName()+".png");
 
 			return new ResponseEntity<>(outputStream.toByteArray(), headers, HttpStatus.OK);
 		} catch (Exception e) {

@@ -1,5 +1,6 @@
 package com.miniproject.self_checkout_app.model;
 
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -36,7 +37,7 @@ public class Product extends CreatedAtUpdatedAt {
     private Long quantity = 0L;
     
     private boolean isAvailable = false;
-
+    
     @PrePersist
     private void onProductCreate() {
         setAvailabilityBasedOnQuantity();
