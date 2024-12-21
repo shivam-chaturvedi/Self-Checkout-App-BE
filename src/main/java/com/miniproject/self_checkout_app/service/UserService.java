@@ -12,15 +12,18 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.miniproject.self_checkout_app.model.CartItem;
 import com.miniproject.self_checkout_app.model.User;
 import com.miniproject.self_checkout_app.repository.UserRepository;
 
 @Service
 public class UserService implements UserDetailsService {
 	private final UserRepository userRepository;
+	private final CartService cartService;
 
-	public UserService(UserRepository userRepository) {
+	public UserService(UserRepository userRepository,CartService cartService) {
 		this.userRepository = userRepository;
+		this.cartService=cartService;
 	}
 	
     @Bean
@@ -83,8 +86,6 @@ public class UserService implements UserDetailsService {
 		}
 	}
 	
-	
-	
 
 	public boolean authenticateUser(User user) {
 		try {
@@ -129,6 +130,10 @@ public class UserService implements UserDetailsService {
 	public User getUserFromUsername(String username) throws NoSuchElementException {
 		User user=userRepository.findByEmail(username).get();			
 		return user;
+	}
+	
+	public List<CartItem> getCartByUser(User user){
+		return cartService.getCartByUser(user);
 	}
 
 }

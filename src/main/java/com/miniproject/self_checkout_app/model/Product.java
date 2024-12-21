@@ -36,6 +36,9 @@ public class Product extends CreatedAtUpdatedAt {
     @Column(nullable = false)
     private Long quantity = 0L;
     
+    @Column(nullable = true)
+    private String rfidTag;
+    
     private boolean isAvailable = false;
     
     @PrePersist

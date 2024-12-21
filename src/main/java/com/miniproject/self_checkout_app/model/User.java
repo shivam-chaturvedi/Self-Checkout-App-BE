@@ -22,13 +22,18 @@ public class User extends CreatedAtUpdatedAt {
     @Id
     private String email;
     
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String password;
     
     @Column(nullable = false)
     private String role = "USER"; //default role is USER
+    
+    @Column(nullable = false)
+    private Boolean isOauthLoginUser=false; 
+    
+    @OneToMany(mappedBy="user",cascade = CascadeType.ALL)
+    private List<CartItem> cart;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true) // Defines the One-to-Many relationship
-//    @JsonManagedReference 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL) 
     private List<UserTransaction> transactions;
 }

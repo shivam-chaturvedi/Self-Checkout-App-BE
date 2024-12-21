@@ -12,79 +12,74 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-
 import com.miniproject.self_checkout_app.model.User;
 import com.miniproject.self_checkout_app.service.UserService;
 
 @RestController
 public class UserController {
-	
+
 	private final UserService userService;
-	
+
 	public UserController(UserService userService) {
-		this.userService=userService;
+		this.userService = userService;
 	}
-	
+
 	@GetMapping("/admin/get-all-users")
 	public List<User> getAllUsers() {
 		return userService.getAllUsers();
 	}
-	
+
 	@PostMapping("/admin/add/user")
 	public ResponseEntity<?> addAuthorizedUser(@RequestBody User user) {
-		Map<String, Object> resMsg=new HashMap<String, Object>();
+		Map<String, Object> resMsg = new HashMap<String, Object>();
 		try {
-			User u=userService.signupNewUser(user);		
+			User u = userService.signupNewUser(user);
 			resMsg.put("success", u);
 			return ResponseEntity.ok(resMsg);
-		}
-		catch(Exception e) {
+		} catch (Exception e) {
 			resMsg.put("error", e.getMessage());
 			return ResponseEntity.badRequest().body(resMsg);
 		}
 	}
-	
+
 	@PutMapping("/admin/update/user")
 	public ResponseEntity<?> updateAuthorizedUser(@RequestBody User user) {
-		Map<String, Object> resMsg=new HashMap<String, Object>();
+		Map<String, Object> resMsg = new HashMap<String, Object>();
 		try {
-			User u=userService.updateUser(user);		
+			User u = userService.updateUser(user);
 			resMsg.put("success", u);
 			return ResponseEntity.ok(resMsg);
-		}
-		catch(Exception e) {
+		} catch (Exception e) {
 			resMsg.put("error", e.getMessage());
 			return ResponseEntity.badRequest().body(resMsg);
 		}
 	}
-	
+
 	@DeleteMapping("/admin/user/delete/{email}")
-	public ResponseEntity<?> deleteUser(@PathVariable("email") String email){
-		Map<String, Object> resMsg=new HashMap<String, Object>();
+	public ResponseEntity<?> deleteUser(@PathVariable("email") String email) {
+		Map<String, Object> resMsg = new HashMap<String, Object>();
 		try {
-			userService.removeUser(email);		
+			userService.removeUser(email);
 			resMsg.put("success", "user deleted");
 			return ResponseEntity.ok(resMsg);
-		}
-		catch(Exception e) {
+		} catch (Exception e) {
 			resMsg.put("error", e.getMessage());
 			return ResponseEntity.badRequest().body(resMsg);
 		}
 	}
-	
-	@GetMapping(path="/user/{email}")
-	public ResponseEntity<?> getUser(@PathVariable("email") String email){
-		Map<String, Object> resMsg=new HashMap<String, Object>();
+
+	@GetMapping(path = "/user/{email}")
+	public ResponseEntity<?> getUser(@PathVariable("email") String email) {
+		Map<String, Object> resMsg = new HashMap<String, Object>();
 		try {
-			User u=userService.getUserFromUsername(email);
+			User u = userService.getUserFromUsername(email);
 			resMsg.put("user", u);
 			return ResponseEntity.ok(resMsg);
-		}
-		catch(Exception e) {
+		} catch (Exception e) {
 			resMsg.put("error", e.getMessage());
 			return ResponseEntity.badRequest().body(resMsg);
 		}
 	}
-	
-	
+
+
 }

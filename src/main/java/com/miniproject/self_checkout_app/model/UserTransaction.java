@@ -1,12 +1,12 @@
 package com.miniproject.self_checkout_app.model;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -34,9 +34,13 @@ public class UserTransaction extends CreatedAtUpdatedAt {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(nullable = false)
     @JsonBackReference
     private User user;
+    
+    @OneToMany(mappedBy = "userTransaction")
+    @JsonManagedReference("cart-transaction")
+    private List<CartItem> cart=new ArrayList<CartItem>();
 
     private String currency = "INR";
 
@@ -47,10 +51,6 @@ public class UserTransaction extends CreatedAtUpdatedAt {
 
     private String status = "Pending";
     
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY,mappedBy = "userTransaction")
-    @JsonManagedReference
-    private List<CartItem> cart;
-
     @PrePersist
     protected void onTransactionCreate() {
         this.receipt = "REC-" + UUID.randomUUID().toString();

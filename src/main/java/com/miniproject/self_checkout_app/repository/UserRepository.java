@@ -8,6 +8,5 @@ import com.miniproject.self_checkout_app.model.User;
 @Repository
 public interface UserRepository extends JpaRepository<User, String>{
 	Optional<User> findByEmail(String username);
-	
 	boolean existsByEmail(String username);
 }

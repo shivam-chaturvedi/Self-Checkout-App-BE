@@ -4,25 +4,22 @@ import org.springframework.beans.factory.annotation.Value;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.miniproject.self_checkout_app.dto.CreateOrderRequest;
 import com.miniproject.self_checkout_app.model.CartItem;
 import com.miniproject.self_checkout_app.model.Product;
 import com.miniproject.self_checkout_app.model.User;
 import com.miniproject.self_checkout_app.model.UserTransaction;
+import com.miniproject.self_checkout_app.service.CartService;
 import com.miniproject.self_checkout_app.service.ProductService;
 import com.miniproject.self_checkout_app.service.UserService;
 import com.miniproject.self_checkout_app.service.UserTransactionService;
 import com.razorpay.Order;
 import com.razorpay.Payment;
 import com.razorpay.RazorpayClient;
-
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,7 +32,7 @@ public class PaymentController {
 	private final UserTransactionService userTransactionService;
 	private final UserService userService;
 	private final ProductService productService;
-	
+	private final CartService cartService;
 
 	@Value("${razorpay.key}")
 	private String RAZORPAY_KEY;
@@ -43,15 +40,17 @@ public class PaymentController {
 	@Value("${razorpay.secret}")
 	private String RAZORPAY_SECRET;
 
-	public PaymentController(UserTransactionService userTransactionService, UserService userService,ProductService productService) {
+	public PaymentController(UserTransactionService userTransactionService, UserService userService,ProductService productService,CartService
+			 cartService) {
 		this.userTransactionService = userTransactionService;
 		this.userService = userService;
 		this.productService=productService;
+		this.cartService=cartService;
 	}
 
 	// Create an order on Razorpay
-	@PostMapping("/create-order")
-	public ResponseEntity<?> createOrder(@RequestBody CreateOrderRequest request) {
+	@PostMapping("/create-order/{userEmail}")
+	public ResponseEntity<?> createOrder(@PathVariable("userEmail") String userEmail) {
 		Map<String, Object> response = new HashMap<String, Object>();
 		try {
 			// Initialize Razorpay Client
@@ -61,39 +60,39 @@ public class PaymentController {
 
 			org.json.JSONObject options = new org.json.JSONObject();
 
-//            creating transaction
 			double amount=0;
+//            creating transaction
 			UserTransaction userTransaction = new UserTransaction();
-			List<CartItem> cart=new ArrayList<CartItem>();
-			for(CartItem item:request.getCart()) {
-				Product p=productService.getProduct(item.getId()).get();
-				if(p.getQuantity()<item.getQuantity() ) {
-					response.put("error", "Cart Item "+p.getName()+" Quantity not available");
-					return ResponseEntity.badRequest().body(response);
+			User user=userService.getUserFromUsername(userEmail);
+//			this will get current cart for user
+			List<CartItem> cart=userService.getCartByUser(user);
+
+			for(CartItem item:cart){
+				Product p=productService.getProduct(item.getProductId()).get();
+				if(item.getQuantity()<=p.getQuantity()) {
+					amount+=item.getQuantity()*p.getPrice();	
+					
+				}else {
+					throw new Exception("Product "+p.getName()+" Quantity Not Available!");
 				}
-				amount+=p.getPrice()*item.getQuantity();
-//				update quantity only in user transaction object cart  
-//				p.setQuantity(p.getQuantity()-item.getQuantity());
-				CartItem c=new CartItem();
-				c.setProductId(p.getId());
-				c.setQuantity(p.getQuantity()-item.getQuantity());
-				c.setAmount(amount);
-				c.setUserTransaction(userTransaction);
-				cart.add(c);
-				
-			}
+			};
+			
 			if (amount < 1) {
 				response.put("error", "amount must be greater than 0");
 				return ResponseEntity.badRequest().body(response);
 			}
+			
+			
+//			System.out.println(userTransaction);
 			userTransaction.setAmount(amount);
 			userTransaction.setCart(cart);
-			User user = userService.getUserFromUsername(request.getUsername());
 			userTransaction.setUser(user);
-
 			userTransaction = userTransactionService.createTransaction(userTransaction);
-//			System.out.println(userTransaction);
-
+			
+			for(CartItem item:cart) {
+				item.setUserTransaction(userTransaction);
+				cartService.addItemToCart(item);
+			}
 			options.put("amount", userTransaction.getAmount() * 100); // amount in paisa
 			options.put("currency", userTransaction.getCurrency());
 			options.put("receipt", userTransaction.getReceipt());
@@ -103,7 +102,6 @@ public class PaymentController {
 			Order order = razorpay.Orders.create(options);
 
 			// Create a response object
-
 			response.put("id", order.get("id")); // Razorpay Order ID
 			response.put("amount", order.get("amount"));
 			response.put("currency", order.get("currency"));
@@ -133,11 +131,18 @@ public class PaymentController {
 			if ("captured".equals(payment.get("status"))) {
 				UserTransaction userTransaction = userTransactionService.getTransactionById(transactionId);
 				userTransaction.setStatus("Completed");
+				User u=userTransaction.getUser();
 //				if payment is successfull then based on user transaction cart update quantity 
-				 for(CartItem c:userTransaction.getCart()) {
+//				getting current active cart 
+				 for(CartItem c:userService.getCartByUser(u)) {
 					 Product p=productService.getProduct(c.getProductId()).get();
+//					 update quantity of products if transaction is successfull
 					 p.setQuantity(c.getQuantity());
+					 
 					 productService.save(p);
+					 c.setCurrentCartItem(false);
+//					 update cart also and set is current cart to false
+					 cartService.addItemToCart(c);
 				 }
 
 //				this will update the transaction status 

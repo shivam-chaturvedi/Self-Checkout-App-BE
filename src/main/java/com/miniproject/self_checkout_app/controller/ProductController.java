@@ -39,6 +39,7 @@ public class ProductController {
 		try {
 			Product p = productService.save(product);
 			resMsg.put("success", p);
+			System.out.println(p);
 			return ResponseEntity.ok(resMsg);
 		} catch (Exception e) {
 			resMsg.put("error", e.getMessage());

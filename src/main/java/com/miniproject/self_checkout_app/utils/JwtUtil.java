@@ -5,6 +5,7 @@ import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.miniproject.self_checkout_app.service.UserService;
@@ -22,11 +23,10 @@ public class JwtUtil {
 		this.userService = userService;
 	}
 
-	// Hardcoded Base64-encoded secret key (this should be stored securely)
-	private final String SECRET_KEY_STRING = "yourhSJKSHDJKSHDKJSAHDKJSAHJKASHJKjcnckadkadjkadsjdlka";
-
-	// JWT expiration time (default is 1 hour)
-	private long expirationTime = 1000 * 60 * 60*24;
+	@Value("${SECRET_KEY}")
+	private String SECRET_KEY_STRING;
+	
+	private long expirationTime = 1000L * 60 * 60 * 24 * 30; // 30 days
 
 	// Decode the Base64 string and store it as a Key object
 	private Key getSecretKey() {
@@ -56,7 +56,7 @@ public class JwtUtil {
 		JwtBuilder builder = Jwts.builder().setSubject(username) // Set the username as the subject
 				.setIssuedAt(new Date()) // Set the issued date
 				.setExpiration(new Date(System.currentTimeMillis() + expirationTime)) // Set expiration time
-				.signWith(getSecretKey()); // Sign with the hardcoded secret key
+				.signWith(getSecretKey()); // Sign with the secret key
 		return builder.compact(); // Generate and return the token
 	}
 
@@ -78,7 +78,7 @@ public class JwtUtil {
 
 	// Extract all claims from the token
 	private Claims extractAllClaims(String token) {
-		return Jwts.parserBuilder().setSigningKey(getSecretKey()) // Use the hardcoded secret key to verify the
+		return Jwts.parserBuilder().setSigningKey(getSecretKey()) // Use thesecret key to verify the
 																	// signature
 				.build().parseClaimsJws(token) // Parse the JWT and get all claims
 				.getBody();

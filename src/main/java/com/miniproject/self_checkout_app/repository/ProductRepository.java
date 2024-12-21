@@ -12,4 +12,6 @@ public interface ProductRepository extends JpaRepository<Product, Long>{
 	Optional<Product> findByName(String name);
 	List<Product> findByCategory(String name);
 	List<Product> findByIsAvailable(boolean value);
+	Optional<Product> findByRfidTag(String rfidTag);
+	boolean existsById(Long id);
 }
