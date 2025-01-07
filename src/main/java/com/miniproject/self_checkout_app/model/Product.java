@@ -24,13 +24,13 @@ public class Product extends CreatedAtUpdatedAt {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, length = 250, nullable = false)
+    @Column(unique = true, length = 500, nullable = false)
     private String name;
     
     @Column(nullable = false)
     private Double price;
     
-    @Column(nullable = false, length = 250)
+    @Column(nullable = false, length = 500)
     private String category;
     
     @Column(nullable = false)

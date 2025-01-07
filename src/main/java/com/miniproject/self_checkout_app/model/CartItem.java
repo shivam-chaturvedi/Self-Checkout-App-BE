@@ -1,5 +1,6 @@
 package com.miniproject.self_checkout_app.model;
 
+
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import jakarta.persistence.Column;
@@ -32,17 +33,11 @@ public class CartItem extends CreatedAtUpdatedAt {
     private Long quantity=0L;
     
     @Column(nullable = false)
-    private double amount=0;
+    private double amount=0.0;
     
-    @Column(nullable = false) 
-    private boolean isCurrentCartItem=true;
- 
     @ManyToOne
-    @JsonBackReference("user")
-    private User user;
-     
-    @ManyToOne
-    @JsonBackReference("cart-transaction")
-    @JoinColumn(nullable = true)
-    private UserTransaction userTransaction;
+    @JoinColumn(nullable = false)
+    @JsonBackReference("cart-items")
+    private UserCart userCart;
+    
 }

@@ -12,18 +12,18 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.miniproject.self_checkout_app.model.CartItem;
+import com.miniproject.self_checkout_app.model.UserCart;
 import com.miniproject.self_checkout_app.model.User;
 import com.miniproject.self_checkout_app.repository.UserRepository;
 
 @Service
 public class UserService implements UserDetailsService {
 	private final UserRepository userRepository;
-	private final CartService cartService;
+	private final UserCartService userCartService;
 
-	public UserService(UserRepository userRepository,CartService cartService) {
+	public UserService(UserRepository userRepository,UserCartService userCartService) {
 		this.userRepository = userRepository;
-		this.cartService=cartService;
+		this.userCartService=userCartService;
 	}
 	
     @Bean
@@ -37,8 +37,6 @@ public class UserService implements UserDetailsService {
 			if (userRepository.existsByEmail(user.getEmail())) {
 				throw new RuntimeException("Already Exists !");
 			}
-		} catch (RuntimeException e) {
-			throw new RuntimeException("Already Exists !");
 		} catch (Exception e) {
 			System.err.println(e.getLocalizedMessage());
 		}
@@ -122,18 +120,20 @@ public class UserService implements UserDetailsService {
 	
 	/**
 	 * gets user by username
-	 * @param token
-	 * @param jwtUtil
-	 * @return
+	 * @return user by email
 	 * @throws NoSuchElementException
 	 */
 	public User getUserFromUsername(String username) throws NoSuchElementException {
 		User user=userRepository.findByEmail(username).get();			
 		return user;
 	}
-	
-	public List<CartItem> getCartByUser(User user){
-		return cartService.getCartByUser(user);
+	/**
+	 * 
+	 * @param user
+	 * @return active UserCart or null if not found
+	 */
+	public UserCart getUserCartByUser(User user){
+		return userCartService.getActiveUserCartByUser(user);
 	}
 
 }

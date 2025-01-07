@@ -1,7 +1,6 @@
 package com.miniproject.self_checkout_app.controller;
 
 import java.io.ByteArrayOutputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,10 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
-
 import com.miniproject.self_checkout_app.model.Product;
 import com.miniproject.self_checkout_app.service.ProductService;
 import com.miniproject.self_checkout_app.utils.QRCodeGenerator;
@@ -37,9 +33,8 @@ public class ProductController {
 	public ResponseEntity<?> addProduct(@RequestBody Product product) {
 		Map<String, Object> resMsg = new HashMap<String, Object>();
 		try {
-			Product p = productService.save(product);
+			Product p = productService.addNewProduct(product);
 			resMsg.put("success", p);
-			System.out.println(p);
 			return ResponseEntity.ok(resMsg);
 		} catch (Exception e) {
 			resMsg.put("error", e.getMessage());
@@ -47,12 +42,11 @@ public class ProductController {
 		}
 	}
 
-	@PutMapping(path = "/admin/update/product/{id}")
-	public ResponseEntity<?> updateProduct(@PathVariable("id") Long productId, @RequestBody Product product) {
+	@PutMapping(path = "/admin/update/product")
+	public ResponseEntity<?> updateProduct(@RequestBody Product product) {
 		Map<String, Object> resMsg = new HashMap<String, Object>();
 		try {
-			System.out.println(product);
-			Product p = productService.save(product);
+			Product p = productService.updateProduct(product);
 			resMsg.put("success", p);
 			return ResponseEntity.ok(resMsg);
 		} catch (Exception e) {
@@ -63,7 +57,6 @@ public class ProductController {
 
 	@GetMapping(path = "/product/get-all")
 	public ResponseEntity<?> getAllProducts() {
-		System.out.println("Jrkejqhrqejk");
 		List<Product> products = productService.getAllProducts();
 		return new ResponseEntity<>(products, HttpStatus.OK);
 	}
@@ -78,60 +71,7 @@ public class ProductController {
 		} else {
 			return new ResponseEntity<>(product, HttpStatus.OK);
 		}
-	}
-	
-	
-	
-	/**
-	 * 	this method is for bulk upload of products , it is not active for now
-	 * @param products
-	 * @return
-	 */
-	@Deprecated
-	@PostMapping(path = "admin/product/upload", consumes = "multipart/form-data")
-	public ResponseEntity<?> bulkUpload(@RequestParam("products") MultipartFile products) {
-		Map<String, Object> resMsg = new HashMap<>();
-		List<Product> newAddedProducts = new ArrayList<>(); // Properly initialize the list
-
-		if (products.isEmpty()) {
-			System.out.println("No file uploaded!");
-			resMsg.put("error", "Uploaded file is empty!");
-			return ResponseEntity.badRequest().body(resMsg);
-		}
-
-		try {
-			// Parse CSV to List<Product>
-			List<Product> parsedProducts = ProductService.csvToProducts(products);
-
-			for (Product product : parsedProducts) {
-				// Check if the product exists by name
-				Optional<Product> existingProductOpt = productService.getProduct(product.getName());
-
-				if (existingProductOpt.isPresent()) {
-					// Update the existing product with new values
-					Product existingProduct = existingProductOpt.get();
-					existingProduct.setPrice(product.getPrice()); // Update price
-					existingProduct.setCategory(product.getCategory()); // Update category
-					existingProduct.setQuantity(product.getQuantity()); // Update quantity
-					productService.save(existingProduct); // Save updated product
-				} else {
-					// Save new product
-					newAddedProducts.add(product);
-					productService.save(product);
-				}
-			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
-			resMsg.put("error", "An error occurred while processing the file: " + e.getMessage());
-			return ResponseEntity.badRequest().body(resMsg);
-		}
-
-		resMsg.put("message", "Bulk upload processed successfully!");
-		resMsg.put("newAddedProducts", newAddedProducts);
-		return ResponseEntity.ok(resMsg);
-	}
-	
+	}	
 
 	@DeleteMapping(path = "/admin/product/delete/{id}")
 	public ResponseEntity<String> deleteProduct(@PathVariable("id") Long id) {
@@ -156,8 +96,7 @@ public class ProductController {
 
 			return new ResponseEntity<>(outputStream.toByteArray(), headers, HttpStatus.OK);
 		} catch (Exception e) {
-			e.printStackTrace();
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
 		}
 	}
 

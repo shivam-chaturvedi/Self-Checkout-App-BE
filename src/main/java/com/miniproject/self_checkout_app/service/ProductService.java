@@ -1,16 +1,8 @@
 package com.miniproject.self_checkout_app.service;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-
 import com.miniproject.self_checkout_app.model.CartItem;
 import com.miniproject.self_checkout_app.model.Product;
 import com.miniproject.self_checkout_app.repository.ProductRepository;
@@ -18,98 +10,127 @@ import com.miniproject.self_checkout_app.repository.ProductRepository;
 @Service
 public class ProductService {
 
-	private ProductRepository productRepository;
-	private CartService cartService;
+    private ProductRepository productRepository;
+    private CartItemService cartItemService;
 
-	public ProductService(ProductRepository productRepository, CartService cartService) {
-		this.productRepository = productRepository;
-		this.cartService = cartService;
-	}
+    public ProductService(ProductRepository productRepository, CartItemService cartItemService) {
+        this.productRepository = productRepository;
+        this.cartItemService = cartItemService;
+    }
 
-	public Product save(Product product) {
-//		updated or saved product
-		Product updatedProduct = productRepository.save(product);
-		CartItem item = cartService.getCartItemByProductId(product.getId());
-		if (item != null) {
-//		update current cart item price if any product price changes 
-			item.setAmount(product.getPrice() * item.getQuantity());
-			cartService.addItemToCart(item);
-		}
-		return updatedProduct;
-	}
+    /**
+     * Adds a new product to the repository.
+     *
+     * @param product the product to add
+     * @return the saved product
+     */
+    public Product addNewProduct(Product product) {
+        return productRepository.save(product);
+    }
 
-	public List<Product> getAllProducts() {
-		return productRepository.findAll();
-	}
+    /**
+     * Updates an existing product in the repository. If the product's price has changed,
+     * it updates the associated cart items with the new price.
+     *
+     * @param product the product with updated details
+     * @return the updated product
+     */
+    public Product updateProduct(Product product) {
+        Product old = productRepository.findById(product.getId()).get();
+        
+        // Check if the product price has been updated
+        if (old.getPrice() != product.getPrice()) {
+            // Retrieve all cart items associated with the product
+            List<CartItem> items = cartItemService.getCartItemsByProductId(product.getId());
+            if (!items.isEmpty()) {
+                for (CartItem item : items) {
+                    // Update cart items only if the cart is active
+                    if (item.getUserCart().isActive()) {
+                        // Recalculate the cart item amount based on the updated product price
+                        item.setAmount(item.getQuantity() * product.getPrice());
+                        cartItemService.updateCartItem(item);
+                    }
+                }
+            }
+        }
+        return productRepository.save(product);
+    }
 
-	public Optional<Product> getProduct(Long id) {
-		return productRepository.findById(id);
-	}
+    /**
+     * Retrieves all products from the repository.
+     *
+     * @return a list of all products
+     */
+    public List<Product> getAllProducts() {
+        return productRepository.findAll();
+    }
 
-	public List<Product> saveAll(List<Product> products) {
-		return productRepository.saveAll(products);
-	}
+    /**
+     * Retrieves a product by its ID.
+     *
+     * @param id the product ID
+     * @return an optional containing the product if found, otherwise empty
+     */
+    public Optional<Product> getProduct(Long id) {
+        return productRepository.findById(id);
+    }
 
-	public void deleteProduct(Long id) {
-		productRepository.deleteById(id);
-	}
+    /**
+     * Adds a list of products to the repository in bulk.
+     *
+     * @param products the list of products to add
+     * @return a list of saved products
+     */
+    public List<Product> bulkAddProducts(List<Product> products) {
+        return productRepository.saveAll(products);
+    }
 
-	public Optional<Product> getProduct(String name) {
-		return productRepository.findByName(name);
-	}
+    /**
+     * Deletes a product by its ID.
+     *
+     * @param id the product ID
+     */
+    public void deleteProduct(Long id) {
+        productRepository.deleteById(id);
+    }
 
-	public Optional<Product> getProductByRfidTag(String rfidTag) {
-		return productRepository.findByRfidTag(rfidTag);
-	}
+    /**
+     * Retrieves a product by its name.
+     *
+     * @param name the name of the product
+     * @return an optional containing the product if found, otherwise empty
+     */
+    public Optional<Product> getProduct(String name) {
+        return productRepository.findByName(name);
+    }
 
-	public List<Product> getProductsByCategory(String category) {
-		return productRepository.findByCategory(category);
-	}
+    /**
+     * Retrieves a product by its RFID tag.
+     *
+     * @param rfidTag the RFID tag of the product
+     * @return an optional containing the product if found, otherwise empty
+     */
+    public Optional<Product> getProductByRfidTag(String rfidTag) {
+        return productRepository.findByRfidTag(rfidTag);
+    }
 
-	public List<Product> getAvailableProducts(boolean value) {
-		return productRepository.findByIsAvailable(value);
-	}
+    /**
+     * Retrieves all products in a specific category.
+     *
+     * @param category the category of the products
+     * @return a list of products in the given category
+     */
+    public List<Product> getProductsByCategory(String category) {
+        return productRepository.findByCategory(category);
+    }
 
-	public static List<Product> csvToProducts(MultipartFile file) {
-		List<Product> products = new ArrayList<>();
-
-		try (InputStream is = file.getInputStream();
-				BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
-
-			String line;
-			boolean isFirstLine = true;
-			while ((line = reader.readLine()) != null) {
-				if (isFirstLine) {
-					isFirstLine = false;
-					continue; // Skip header line
-				}
-
-				String[] fields = line.split(",");
-				if (fields.length >= 2) { // Ensure at least name and price are present
-					try {
-						String name = fields[0].trim();
-						double price = Double.parseDouble(fields[1].trim());
-						String category = fields.length > 2 ? fields[2].trim() : "Uncategorized";
-						long quantity = fields.length > 3 ? Long.parseLong(fields[3].trim()) : 0;
-
-						Product product = new Product();
-						product.setName(name);
-						product.setPrice(price);
-						product.setCategory(category);
-						product.setQuantity(quantity);
-						product.setAvailable(quantity > 0); // Set availability
-
-						products.add(product);
-					} catch (NumberFormatException ex) {
-						System.err.println("Skipping invalid row: " + line);
-					}
-				}
-			}
-		} catch (IOException e) {
-			e.printStackTrace(); // Replace with proper logging in production
-		}
-
-		return products;
-	}
-
+    /**
+     * Retrieves all products based on their availability status.
+     *
+     * @param value the availability status (true for available, false for unavailable)
+     * @return a list of products matching the availability status
+     */
+    public List<Product> getAvailableProducts(boolean value) {
+        return productRepository.findByIsAvailable(value);
+    }
 }

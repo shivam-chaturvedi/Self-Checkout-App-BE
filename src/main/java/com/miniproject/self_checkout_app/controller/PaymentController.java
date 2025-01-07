@@ -9,22 +9,24 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.miniproject.self_checkout_app.model.UserCart;
 import com.miniproject.self_checkout_app.model.CartItem;
 import com.miniproject.self_checkout_app.model.Product;
 import com.miniproject.self_checkout_app.model.User;
 import com.miniproject.self_checkout_app.model.UserTransaction;
-import com.miniproject.self_checkout_app.service.CartService;
+import com.miniproject.self_checkout_app.service.UserCartService;
 import com.miniproject.self_checkout_app.service.ProductService;
+import com.miniproject.self_checkout_app.service.StoreCartService;
 import com.miniproject.self_checkout_app.service.UserService;
 import com.miniproject.self_checkout_app.service.UserTransactionService;
 import com.razorpay.Order;
 import com.razorpay.Payment;
 import com.razorpay.RazorpayClient;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-
+ 
 @RestController
 @RequestMapping("/api")
 public class PaymentController {
@@ -32,7 +34,8 @@ public class PaymentController {
 	private final UserTransactionService userTransactionService;
 	private final UserService userService;
 	private final ProductService productService;
-	private final CartService cartService;
+	private final StoreCartService storeCartService;
+	private final UserCartService cartService;
 
 	@Value("${razorpay.key}")
 	private String RAZORPAY_KEY;
@@ -40,12 +43,12 @@ public class PaymentController {
 	@Value("${razorpay.secret}")
 	private String RAZORPAY_SECRET;
 
-	public PaymentController(UserTransactionService userTransactionService, UserService userService,ProductService productService,CartService
-			 cartService) {
+	public PaymentController(UserTransactionService userTransactionService, UserService userService,ProductService productService,UserCartService cartService, StoreCartService storeCartService) {
 		this.userTransactionService = userTransactionService;
 		this.userService = userService;
-		this.productService=productService;
+		this.storeCartService = storeCartService;
 		this.cartService=cartService;
+		this.productService=productService;
 	}
 
 	// Create an order on Razorpay
@@ -65,9 +68,9 @@ public class PaymentController {
 			UserTransaction userTransaction = new UserTransaction();
 			User user=userService.getUserFromUsername(userEmail);
 //			this will get current cart for user
-			List<CartItem> cart=userService.getCartByUser(user);
+			UserCart cart=userService.getUserCartByUser(user);
 
-			for(CartItem item:cart){
+			for(CartItem item:cart.getItems()){
 				Product p=productService.getProduct(item.getProductId()).get();
 				if(item.getQuantity()<=p.getQuantity()) {
 					amount+=item.getQuantity()*p.getPrice();	
@@ -84,15 +87,13 @@ public class PaymentController {
 			
 			
 //			System.out.println(userTransaction);
+			
 			userTransaction.setAmount(amount);
-			userTransaction.setCart(cart);
+			userTransaction.setUserCart(cart);
 			userTransaction.setUser(user);
 			userTransaction = userTransactionService.createTransaction(userTransaction);
 			
-			for(CartItem item:cart) {
-				item.setUserTransaction(userTransaction);
-				cartService.addItemToCart(item);
-			}
+		
 			options.put("amount", userTransaction.getAmount() * 100); // amount in paisa
 			options.put("currency", userTransaction.getCurrency());
 			options.put("receipt", userTransaction.getReceipt());
@@ -134,19 +135,23 @@ public class PaymentController {
 				User u=userTransaction.getUser();
 //				if payment is successfull then based on user transaction cart update quantity 
 //				getting current active cart 
-				 for(CartItem c:userService.getCartByUser(u)) {
+				UserCart cart=userService.getUserCartByUser(u);
+				 for(CartItem c:cart.getItems()) {
 					 Product p=productService.getProduct(c.getProductId()).get();
 //					 update quantity of products if transaction is successfull
 					 p.setQuantity(c.getQuantity());
 					 
-					 productService.save(p);
-					 c.setCurrentCartItem(false);
-//					 update cart also and set is current cart to false
-					 cartService.addItemToCart(c);
-				 }
+					 productService.updateProduct(p);
+				}
 
+//				 update cart also and set is current cart to false
+				 cart.setActive(false);
+				 cartService.updateUserCart(cart);
+			 
+//				 detach cart for that user if payment is successfull
+				 storeCartService.detachStoreCartFromAnyUser(cart.getStoreCart());
 //				this will update the transaction status 
-				userTransactionService.createTransaction(userTransaction);
+				userTransactionService.updateTransaction(userTransaction);
 				res.put("success", "Payment is successful and captured.");
 				return ResponseEntity.ok(res);
 			} else {

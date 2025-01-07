@@ -17,6 +17,10 @@ public class UserTransactionService {
 		return userTransactionRepository.save(userTransaction);
 	}
 	
+	public UserTransaction updateTransaction(UserTransaction userTransaction) {
+		return userTransactionRepository.save(userTransaction);
+	}
+	
 	public UserTransaction getTransactionById(Long id) {
 		return userTransactionRepository.findById(id).get();
 	}
