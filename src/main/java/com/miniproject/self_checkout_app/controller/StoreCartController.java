@@ -17,19 +17,22 @@ import com.miniproject.self_checkout_app.model.User;
 import com.miniproject.self_checkout_app.model.UserCart;
 import com.miniproject.self_checkout_app.service.StoreCartService;
 import com.miniproject.self_checkout_app.service.UserCartService;
+import com.miniproject.self_checkout_app.service.UserService;
 import com.miniproject.self_checkout_app.utils.QRCodeGenerator;
 
 @RestController
 public class StoreCartController {
 	private final StoreCartService storeCartService;
 	private final UserCartService userCartService;
+	private final UserService userService;
 	
-	public StoreCartController(StoreCartService storeCartService,UserCartService userCartService) {
+	public StoreCartController(StoreCartService storeCartService,UserCartService userCartService, UserService userService) {
 		this.storeCartService=storeCartService;
 		this.userCartService = userCartService;
+		this.userService = userService;
 	}
 	
-	@GetMapping(path="/admin/store-cart/qr/{id}")
+	@GetMapping(path="/store-cart/qr/{id}")
 	public ResponseEntity<?> getQrForStoreCart(@PathVariable("id") Long storeCartId){
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		try {
@@ -48,7 +51,6 @@ public class StoreCartController {
 		} catch (Exception e) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
 		}
-
 	}
 	
 	@PostMapping(path="/admin/store-cart/create")
@@ -66,12 +68,18 @@ public class StoreCartController {
 	}
 	
 	@PostMapping(path="/store-cart/attach/{id}")
-	public ResponseEntity<?> attachStoreCartWithUser(@PathVariable("id") Long storeCartId,User user){
+	public ResponseEntity<?> attachStoreCartWithUser(@PathVariable("id") Long storeCartId,@RequestBody User user){
 		Map<String, Object> res=new HashMap<String, Object>();
 		try {
+			if(user.getEmail()==null) {
+				throw new Exception("User Email is required!");
+			}
 			StoreCart cart=storeCartService.getStoreCartById(storeCartId).get();
-			if(cart.getCurrentUser()==null) {
-				cart=storeCartService.attachStoreCartWithUser(cart, user);
+			User u=userService.getUserFromUsername(user.getEmail());
+			if(cart.getCurrentUser()==null || cart.getCurrentUser()==u) {
+				if(cart.getCurrentUser()!=u) {
+					cart=storeCartService.attachStoreCartWithUser(cart, u);					
+				}
 //				after attaching cart with user ,create a virtual user cart to store every product in that cart
 				UserCart userCart=userCartService.getVirtualUserCart(cart);
 
@@ -79,6 +87,7 @@ public class StoreCartController {
 				res.put("userCart", userCart);
 				return ResponseEntity.ok(res);
 			}
+			
 			else {
 				throw new Exception("Store Cart With id = "+storeCartId+" already attached with another user!");
 			}

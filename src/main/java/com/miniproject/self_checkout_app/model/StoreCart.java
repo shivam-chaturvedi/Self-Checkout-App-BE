@@ -1,6 +1,10 @@
 package com.miniproject.self_checkout_app.model;
 
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -31,9 +35,11 @@ public class StoreCart extends CreatedAtUpdatedAt {
     // Current user assigned to the store cart
     @OneToOne
     @JoinColumn(nullable = true)
+    @JsonBackReference("store-cart-user")
     private User currentUser;
 
     // Historical user carts related to this store cart
     @OneToMany(mappedBy = "storeCart", cascade = CascadeType.ALL)
+    @JsonManagedReference("user-store-cart")
     private List<UserCart> userCarts;
 }

@@ -37,6 +37,7 @@ public class User extends CreatedAtUpdatedAt {
     // Current store cart assigned to the user; managed by the store
     @OneToOne(mappedBy = "currentUser")
     @JoinColumn(nullable = true) // Optional, as not all users may have an active store cart
+    @JsonManagedReference("store-cart-user")
     private StoreCart storeCart;
 
     // Virtual carts to store the user's cart history

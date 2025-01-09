@@ -24,7 +24,7 @@ public class JwtAuthenticationFilter implements Filter {
 	
 	private final JwtUtil jwtUtil;
 	private final UserService userService;
-	private final String[] openPaths= {"/login","/signup","/verify-token","/product/qr/"};
+	private final String[] openPaths= {"/login","/signup","/verify-token","/product/qr/","/store-cart/qr/"};
 	
 	
 	public JwtAuthenticationFilter(JwtUtil jwtUtil,UserService userService) {

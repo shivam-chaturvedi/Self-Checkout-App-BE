@@ -34,6 +34,7 @@ public class UserCart extends CreatedAtUpdatedAt{
 	
 	@ManyToOne
 	@JoinColumn(nullable = false)
+	@JsonBackReference("user-store-cart")
 	private StoreCart storeCart;
 	
 	@ManyToOne
@@ -42,7 +43,7 @@ public class UserCart extends CreatedAtUpdatedAt{
 	
 	@OneToMany(mappedBy ="userCart",cascade = CascadeType.ALL,orphanRemoval = true)
     @JsonManagedReference("cart-items")
-	private List<CartItem> items; 
+	private List<CartItem> items;  
 	
 	@OneToOne(mappedBy = "userCart")
     @JsonBackReference("cart-transaction")
