@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import com.miniproject.self_checkout_app.model.User;
+import com.miniproject.self_checkout_app.model.UserCart;
 import com.miniproject.self_checkout_app.service.UserService;
 
 @RestController
@@ -80,6 +81,23 @@ public class UserController {
 			return ResponseEntity.badRequest().body(resMsg);
 		}
 	}
+	
 
-
+	@GetMapping(path = "/user/get-active-cart/{email}")
+	public ResponseEntity<?> getActiveCartForUser(@PathVariable("email") String email) {
+		Map<String, Object> resMsg = new HashMap<String, Object>();
+		try {
+			User u = userService.getUserFromUsername(email);
+			UserCart cart= userService.getUserCartByUser(u);
+			if(cart==null) {
+				throw new Exception("No Active Cart Found For This User!");
+			}
+			resMsg.put("userCart", cart);
+			return ResponseEntity.ok(resMsg);
+		} catch (Exception e) {
+			resMsg.put("error", e.getMessage());
+			return ResponseEntity.badRequest().body(resMsg);
+		}
+	}
+	
 }

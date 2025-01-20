@@ -17,10 +17,12 @@ import org.springframework.web.bind.annotation.RestController;
 import com.miniproject.self_checkout_app.model.UserCart;
 import com.miniproject.self_checkout_app.model.CartItem;
 import com.miniproject.self_checkout_app.model.Product;
+import com.miniproject.self_checkout_app.model.StoreCart;
 import com.miniproject.self_checkout_app.model.User;
 import com.miniproject.self_checkout_app.service.CartItemService;
 import com.miniproject.self_checkout_app.service.UserCartService;
 import com.miniproject.self_checkout_app.service.ProductService;
+import com.miniproject.self_checkout_app.service.StoreCartService;
 import com.miniproject.self_checkout_app.service.UserService;
 
 @RestController
@@ -29,11 +31,13 @@ public class UserCartController {
 	private UserCartService cartService;
 	private ProductService productService;
 	private UserService userService;
+	private StoreCartService storeCartService;
 
 	public UserCartController(CartItemService cartItemService, ProductService productService, UserService userService,
-			UserCartService cartService) {
+			UserCartService cartService,StoreCartService storeCartService) {
 		this.cartService = cartService;
 		this.userService = userService;
+		this.storeCartService=storeCartService;
 		this.productService = productService;
 		this.cartItemService = cartItemService;
 
@@ -114,6 +118,8 @@ public class UserCartController {
 			return ResponseEntity.badRequest().body(res);
 		}
 	}
+	
+	
 
 	@GetMapping(path = "/cart/get-all/{userEmail}")
 	public ResponseEntity<?> getCartByUserEmail(@PathVariable("userEmail") String email) {
@@ -121,8 +127,11 @@ public class UserCartController {
 		try {
 			User user = userService.getUserFromUsername(email);
 			List<com.miniproject.self_checkout_app.dto.CartItem> cartDTOList = new ArrayList<com.miniproject.self_checkout_app.dto.CartItem>();
-			List<CartItem> cart = userService.getUserCartByUser(user).getItems();
-			for (CartItem item : cart) {
+			UserCart cart = userService.getUserCartByUser(user);
+			if(cart==null) {
+				throw new Exception("No cart is currently active for this user!");
+			}
+			for (CartItem item : cart.getItems()) {
 				com.miniproject.self_checkout_app.dto.CartItem c = new com.miniproject.self_checkout_app.dto.CartItem();
 				c.setAmount(item.getAmount());
 				c.setCartId(item.getId());
@@ -134,6 +143,22 @@ public class UserCartController {
 			res.put("cart", cartDTOList);
 			return ResponseEntity.ok(res);
 		} catch (Exception e) {
+			res.put("error", e.getMessage());
+			return ResponseEntity.badRequest().body(res);
+		}
+	}
+	
+	
+	@PostMapping(path="/user-cart/detach/{id}")
+	public ResponseEntity<?> detachStoreCartWithUser(@PathVariable("id") Long userCartId){
+		Map<String, Object> res=new HashMap<String, Object>();
+		try {
+			UserCart cart=cartService.getUserCartById(userCartId).get();
+			StoreCart storeCart= storeCartService.detachStoreCartFromAnyUser(cart.getStoreCart());
+			res.put("success", true);
+			res.put("storeCart", storeCart);
+			return ResponseEntity.ok(res);
+		}catch(Exception e) {
 			res.put("error", e.getMessage());
 			return ResponseEntity.badRequest().body(res);
 		}

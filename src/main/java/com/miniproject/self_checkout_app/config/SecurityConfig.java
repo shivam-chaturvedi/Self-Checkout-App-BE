@@ -58,7 +58,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Configure CORS as per your need
             .authorizeHttpRequests(auth -> 
-                auth.requestMatchers("/signup", "/login", "/verify-token","/product/qr/**","/store-cart/qr/**").permitAll() // Allow signup/login without authentication
+                auth.requestMatchers("/signup", "/login", "/verify-token","/product/qr/**","/store-cart/qr/**","/store-cart/get-attached-user/**","/cart","/cart/get-all/**").permitAll() // Allow signup/login without authentication
                     .requestMatchers("/admin/**").hasRole("ADMIN")
                     .requestMatchers("/css/**").permitAll()
                     .anyRequest().authenticated() // Authenticate other requests

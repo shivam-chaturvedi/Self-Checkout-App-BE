@@ -12,6 +12,8 @@ import com.miniproject.self_checkout_app.model.StoreCart;
 import com.miniproject.self_checkout_app.model.User;
 import com.miniproject.self_checkout_app.repository.UserCartRepository;
 
+import jakarta.transaction.Transactional;
+
 @Service
 public class UserCartService {
 
@@ -62,6 +64,7 @@ public class UserCartService {
         }
         throw new Exception("Store Cart is not attached to any user!");
     }
+    
 
     /**
      * Retrieves the active UserCart for a given user.
@@ -95,7 +98,7 @@ public class UserCartService {
     	return userCartRepository.save(userCart);
     }
     
-    
+    @Transactional
     public CartItem addNewItemToUserCart(UserCart cart,Product product) throws Exception {
     	return cartItemService.addItemToCart(product, cart);
     	

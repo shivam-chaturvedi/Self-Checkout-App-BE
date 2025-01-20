@@ -2,11 +2,13 @@ package com.miniproject.self_checkout_app.service;
 
 import java.util.List;
 import java.util.Optional;
+
 import org.springframework.stereotype.Service;
 import com.miniproject.self_checkout_app.model.UserCart;
 import com.miniproject.self_checkout_app.model.CartItem;
 import com.miniproject.self_checkout_app.model.Product;
 import com.miniproject.self_checkout_app.repository.CartItemRepository;
+import jakarta.transaction.Transactional;
 
 @Service
 public class CartItemService {
@@ -27,38 +29,50 @@ public class CartItemService {
      * @return the updated or newly created cart item
      * @throws Exception if the cart is not active
      */
-    public CartItem addItemToCart(Product product, UserCart userCart) throws Exception {
+    @Transactional
+    public  CartItem addItemToCart(Product product, UserCart userCart) throws Exception {
         if (userCart.isActive()) {
             // Check if the product already exists in the cart
-            List<CartItem> items = userCart.getItems();
-            for (CartItem item : items) {
+            CartItem existingItem = null;
+            for (CartItem item : userCart.getItems()) {
                 if (item.getProductId() == product.getId()) {
-                    // Increment the quantity and update the total amount
-                    item.setQuantity(item.getQuantity() + 1);
-                    item.setAmount(item.getQuantity() * product.getPrice());
-                    if (item.getQuantity() > product.getQuantity()) {
-            			throw new Exception("Product " + product.getName() + " Quantity Not Available!");
-            		}
-                    return cartItemRepository.save(item);
+                    existingItem = item; // Found the existing item in the cart
+                    break;
                 }
             }
 
-            // If no cart item exists with the given product ID, create a new one
-            CartItem item = new CartItem();
-            item.setProductId(product.getId());
-            item.setQuantity(1L);
-            item.setAmount(item.getQuantity() * product.getPrice());
-            item.setUserCart(userCart);
-            
-            if (item.getQuantity() > product.getQuantity()) {
-    			throw new Exception("Product " + product.getName() + " Quantity Not Available!");
-    		}
+            if (existingItem != null) {
+                // Increment the quantity and update the total amount
+                existingItem.setQuantity(existingItem.getQuantity() + 1);
+                existingItem.setAmount(existingItem.getQuantity() * product.getPrice());
+                if (existingItem.getQuantity() > product.getQuantity()) {
+                    throw new Exception("Product " + product.getName() + " Quantity Not Available!");
+                }
 
-            return cartItemRepository.save(item);
+                // Save and return the updated CartItem
+                return cartItemRepository.save(existingItem);
+            } else {
+                // If no cart item exists with the given product ID, create a new one
+                CartItem newItem = new CartItem();
+                newItem.setProductId(product.getId());
+                newItem.setQuantity(1L);
+                newItem.setAmount(newItem.getQuantity() * product.getPrice());
+                newItem.setUserCart(userCart);
+
+                if (newItem.getQuantity() > product.getQuantity()) {
+                    throw new Exception("Product " + product.getName() + " Quantity Not Available!");
+                }
+
+                // Save and return the newly created CartItem
+                return cartItemRepository.save(newItem);
+            }
         }
         throw new Exception("Cart Is Not Active!");
     }
 
+    
+    
+    
     /**
      * Deletes a cart item by its ID.
      *

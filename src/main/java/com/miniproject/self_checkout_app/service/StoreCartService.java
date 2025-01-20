@@ -14,24 +14,28 @@ import com.miniproject.self_checkout_app.repository.StoreCartRepository;
 public class StoreCartService {
 	private final StoreCartRepository storeCartRepository;
 	private final UserCartService userCartService;
-	
+
 	public StoreCartService(StoreCartRepository storeCartRepository, UserCartService userCartService) {
-		this.storeCartRepository=storeCartRepository;
+		this.storeCartRepository = storeCartRepository;
 		this.userCartService = userCartService;
 	}
-	
+
 	public StoreCart createNewStoreCart(StoreCart storeCart) {
 		return storeCartRepository.save(storeCart);
 	}
-	
+
 	public StoreCart updateStoreCart(StoreCart storeCart) {
 		return storeCartRepository.save(storeCart);
 	}
 	
+	public void deleteStoreCart(Long id) {
+		storeCartRepository.deleteById(id);
+	}
+
 	public StoreCart detachStoreCartFromAnyUser(StoreCart storeCart) {
-		List<UserCart> linkedUserCarts= storeCart.getUserCarts();
-		for(UserCart cart:linkedUserCarts) {
-			if(cart.isActive()) {
+		List<UserCart> linkedUserCarts = storeCart.getUserCarts();
+		for (UserCart cart : linkedUserCarts) {
+			if (cart.isActive()) {
 //				set current active virtual user cart to false  after detaching
 				cart.setActive(false);
 				userCartService.updateUserCart(cart);
@@ -40,25 +44,30 @@ public class StoreCartService {
 		storeCart.setCurrentUser(null);
 		return storeCartRepository.save(storeCart);
 	}
-	
-	public List<StoreCart> getAllStoreCarts(){
+
+	public List<StoreCart> getAllStoreCarts() {
 		return storeCartRepository.findAll();
 	}
-	
+
 	public Optional<StoreCart> getStoreCartById(Long id) {
 		return storeCartRepository.findById(id);
 	}
-	
-	public StoreCart attachStoreCartWithUser(StoreCart storeCart,User user) throws Exception {
-		if(storeCart.isActive()) {
+
+	public StoreCart attachStoreCartWithUser(StoreCart storeCart, User user) throws Exception {
+		if (storeCart.isActive()) {
 			storeCart.setCurrentUser(user);
-		}
-		else {
+		} else {
 			throw new Exception("Store Cart Is Not Currently Active !");
 		}
 		return storeCartRepository.save(storeCart);
 	}
-	
-	
-	
+
+	public UserCart getActiveUserCart(StoreCart storeCart) {
+		try {
+			return storeCart.getUserCarts().stream().filter(UserCart::isActive).toList().getFirst();
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
 }

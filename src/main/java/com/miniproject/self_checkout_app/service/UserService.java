@@ -1,5 +1,7 @@
 package com.miniproject.self_checkout_app.service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -41,7 +43,7 @@ public class UserService implements UserDetailsService {
 			System.err.println(e.getLocalizedMessage());
 		}
 		user.setRole(user.getRole().toUpperCase());
-		user.setPassword(passwordEncoder().encode(user.getPassword()).trim());
+		user.setPassword(passwordEncoder().encode(user.getPassword().toString()));
 		return userRepository.save(user);
 	}
 	
@@ -66,8 +68,17 @@ public class UserService implements UserDetailsService {
 	
 
 	public User updateUser(User user) {
+		User u=getUserFromUsername(user.getEmail());
+//		update role and password
 		user.setRole(user.getRole().toUpperCase());
-		user.setPassword(passwordEncoder().encode(user.getPassword()).trim());
+		user.setPassword(passwordEncoder().encode(user.getPassword().toString()));
+//		set remained things as it is
+		user.setCart(u.getCart());
+		user.setCreatedAt(u.getCreatedAt());
+		user.setStoreCart(u.getStoreCart());
+		user.setTransactions(u.getTransactions());
+		user.setUpdatedAt(LocalDateTime.now());
+		user.setIsOauthLoginUser(u.getIsOauthLoginUser());
 		return userRepository.save(user);
 	}
 	
@@ -89,7 +100,7 @@ public class UserService implements UserDetailsService {
 		try {
 			User user1 = userRepository.findByEmail(user.getEmail()).orElseThrow(
 					() -> new UsernameNotFoundException("User Not Found with username " + user.getEmail()));
-			if (passwordEncoder().matches(user.getPassword().trim(), user1.getPassword())) {
+			if (passwordEncoder().matches(user.getPassword(), user1.getPassword())) {
 				return true;
 			} else {
 				return false;

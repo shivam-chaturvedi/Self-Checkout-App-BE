@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -35,11 +36,11 @@ public class StoreCart extends CreatedAtUpdatedAt {
     // Current user assigned to the store cart
     @OneToOne
     @JoinColumn(nullable = true)
-    @JsonBackReference("store-cart-user")
+    @JsonManagedReference("store-cart-user")
     private User currentUser;
 
     // Historical user carts related to this store cart
-    @OneToMany(mappedBy = "storeCart", cascade = CascadeType.ALL)
-    @JsonManagedReference("user-store-cart")
+    @OneToMany(mappedBy = "storeCart", cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    @JsonBackReference("user-store-cart")
     private List<UserCart> userCarts;
 }

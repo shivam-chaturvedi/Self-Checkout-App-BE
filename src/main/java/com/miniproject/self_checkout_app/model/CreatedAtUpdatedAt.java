@@ -1,6 +1,7 @@
 package com.miniproject.self_checkout_app.model;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
@@ -13,19 +14,19 @@ import lombok.Data;
 public abstract class CreatedAtUpdatedAt {
 
     @Column(updatable = false, nullable = false)
-    protected LocalDate createdAt;
+    protected LocalDateTime createdAt;
 
     @Column(nullable = false)
-    protected LocalDate updatedAt;
+    protected LocalDateTime updatedAt;
 
     @PrePersist
     protected void onCreate() {
-        this.createdAt = LocalDate.now();
+        this.createdAt = LocalDateTime.now();
         this.updatedAt = createdAt;
     }
 
     @PreUpdate
     protected void onUpdate() {
-        this.updatedAt = LocalDate.now();
+        this.updatedAt = LocalDateTime.now();
     }
 }

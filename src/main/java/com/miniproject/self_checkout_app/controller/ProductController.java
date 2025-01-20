@@ -55,7 +55,7 @@ public class ProductController {
 		}
 	}
 
-	@GetMapping(path = "/product/get-all")
+	@GetMapping(path = "/admin/product/get-all")
 	public ResponseEntity<?> getAllProducts() {
 		List<Product> products = productService.getAllProducts();
 		return new ResponseEntity<>(products, HttpStatus.OK);
