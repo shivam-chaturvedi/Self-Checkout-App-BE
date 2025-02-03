@@ -13,7 +13,7 @@ import org.springframework.web.socket.handler.AbstractWebSocketHandler;
 import com.miniproject.self_checkout_app.model.CartItem;
 import com.miniproject.self_checkout_app.model.Product;
 import com.miniproject.self_checkout_app.model.StoreCart;
-import com.miniproject.self_checkout_app.model.UserCart;
+import com.miniproject.self_checkout_app.model.User;
 import com.miniproject.self_checkout_app.service.ProductService;
 import com.miniproject.self_checkout_app.service.StoreCartService;
 import com.miniproject.self_checkout_app.service.UserCartService;
@@ -44,6 +44,10 @@ public class CartWebSocketHandler extends AbstractWebSocketHandler {
                     session.sendMessage(new TextMessage("Invalid cart ID: " + storeCartId));
                     session.close();
                 }
+                User attachedUser= storeCart.get().getCurrentUser();
+                if(attachedUser!=null) {
+                	session.sendMessage(new TextMessage("Connected:-"+attachedUser.getEmail()));
+                }
             } catch (NumberFormatException e) {
                 session.sendMessage(new TextMessage("Invalid cart ID format."));
                 session.close();
@@ -71,14 +75,15 @@ public class CartWebSocketHandler extends AbstractWebSocketHandler {
     private void processDecodedData(WebSocketSession session, String decodedData) throws Exception {
         Optional<StoreCart> storeCart = storeCartService.getStoreCartById(storeCartId);
         if (storeCart.isPresent()) {
-            UserCart userCart = storeCartService.getActiveUserCart(storeCart.get());
-            if (userCart == null) {
+            Long  userCartId = storeCartService.getActiveUserCartId(storeCart.get());
+            
+            if (userCartId == null) {
                 session.sendMessage(new TextMessage("No active user cart found. Please attach a cart."));
                 return;
             }
             Optional<Product> product = productService.getProduct(Long.parseLong(decodedData));
             if (product.isPresent()) {
-                CartItem cartItem = userCartService.addNewItemToUserCart(userCart, product.get());
+                CartItem cartItem = userCartService.addNewItemToUserCart(userCartId, product.get());
                 session.sendMessage(new TextMessage("Added: " + product.get().getName() + " x " + cartItem.getQuantity()));
             } else {
                 session.sendMessage(new TextMessage("Product not found for scanned code."));

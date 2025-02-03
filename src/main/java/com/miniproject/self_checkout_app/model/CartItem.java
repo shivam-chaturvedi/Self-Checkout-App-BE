@@ -39,5 +39,5 @@ public class CartItem extends CreatedAtUpdatedAt {
     @JoinColumn(nullable = false)
     @JsonBackReference("cart-items")
     private UserCart userCart;
-    
+     
 }

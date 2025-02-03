@@ -15,8 +15,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.miniproject.self_checkout_app.model.Product;
 import com.miniproject.self_checkout_app.model.StoreCart;
 import com.miniproject.self_checkout_app.model.User;
 import com.miniproject.self_checkout_app.model.UserCart;

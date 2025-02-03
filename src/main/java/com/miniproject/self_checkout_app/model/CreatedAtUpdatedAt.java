@@ -1,8 +1,6 @@
 package com.miniproject.self_checkout_app.model;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PrePersist;

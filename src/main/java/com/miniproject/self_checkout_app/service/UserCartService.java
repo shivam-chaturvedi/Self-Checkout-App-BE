@@ -99,9 +99,9 @@ public class UserCartService {
     }
     
     @Transactional
-    public CartItem addNewItemToUserCart(UserCart cart,Product product) throws Exception {
-    	return cartItemService.addItemToCart(product, cart);
+    public CartItem addNewItemToUserCart(Long userCartId,Product product) throws Exception {
     	
+    	return cartItemService.addItemToCart(product, userCartId);
     }
     
   }

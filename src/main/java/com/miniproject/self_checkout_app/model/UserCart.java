@@ -2,7 +2,6 @@ package com.miniproject.self_checkout_app.model;
 
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.CascadeType;
@@ -36,15 +35,13 @@ public class UserCart extends CreatedAtUpdatedAt{
 	
 	@ManyToOne
 	@JoinColumn(nullable = false)
-	@JsonManagedReference("user-store-cart")
+	@JsonBackReference("user-store-cart")
 	private StoreCart storeCart;
 	
 	@ManyToOne
-//    @JsonBackReference("user-cart")
-//	@JsonIgnore
 	private User user;
 	
-	@OneToMany(mappedBy ="userCart",cascade = CascadeType.ALL,orphanRemoval = true,fetch = FetchType.EAGER)
+	@OneToMany(mappedBy ="userCart",cascade = CascadeType.ALL,orphanRemoval = true,fetch = FetchType.LAZY)
     @JsonManagedReference("cart-items")
 	private List<CartItem> items;  
 	

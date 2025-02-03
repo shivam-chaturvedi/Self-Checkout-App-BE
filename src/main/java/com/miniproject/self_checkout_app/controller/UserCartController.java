@@ -57,9 +57,7 @@ public class UserCartController {
 			if (p.isEmpty()) {
 				throw new Exception("Product With " + productId + " Id Not Found !");
 			}
-
-			UserCart cart = cartService.getUserCartById(cartId).get();
-			CartItem item=cartService.addNewItemToUserCart(cart, p.get());
+			CartItem item=cartService.addNewItemToUserCart(cartId, p.get());
 
 			res.put("cartItemId", item.getId());
 //			res.put("product", p);
@@ -71,7 +69,7 @@ public class UserCartController {
 		}
 	}
 
-	@DeleteMapping(path = "/cart/remove-item/{cartItemId}")
+	@DeleteMapping(path = "/user-cart/remove-item/{cartItemId}")
 	public ResponseEntity<?> removeItemFromCart(@PathVariable("cartItemId") Long cartItemId) {
 		Map<String, Object> res = new HashMap<String, Object>();
 		try {
@@ -83,7 +81,7 @@ public class UserCartController {
 				cartItem.setAmount(cartItem.getQuantity() * p.getPrice());
 				cartItemService.updateCartItem(cartItem);
 			} else {
-				cartItemService.deleteCartItem(cartItemId);
+				cartItemService.deleteCartItem(cartItem.getId());
 			}
 
 			res.put("success", "Cart Item Removed !");
@@ -94,7 +92,7 @@ public class UserCartController {
 		}
 	}
 
-	@PostMapping(path = "/cart/add-item-by-rfid-tag/{cartId}/{rfidtag}")
+	@PostMapping(path = "/user-cart/add-item-by-rfid-tag/{cartId}/{rfidtag}")
 	public ResponseEntity<?> addItemByRfidTag(@PathVariable("rfidtag") String rfidtag,
 			@PathVariable("cartId") Long cartId) {
 		Map<String, Object> res = new HashMap<String, Object>();
@@ -105,12 +103,10 @@ public class UserCartController {
 			if (p.isEmpty()) {
 				throw new Exception("Product With " + rfidtag + " Not Found !");
 			}
-			
-			UserCart cart = cartService.getUserCartById(cartId).get();
-			CartItem item=cartService.addNewItemToUserCart(cart, p.get());
+			CartItem item=cartService.addNewItemToUserCart(cartId, p.get());
 
 			res.put("cartItemId", item.getId());
-//			res.put("product", p);
+//			res.put("product", p);   
 			res.put("success", true);
 			return ResponseEntity.ok(res);
 		} catch (Exception e) {
@@ -121,7 +117,7 @@ public class UserCartController {
 	
 	
 
-	@GetMapping(path = "/cart/get-all/{userEmail}")
+	@GetMapping(path = "/user-cart/get-all/{userEmail}")
 	public ResponseEntity<?> getCartByUserEmail(@PathVariable("userEmail") String email) {
 		Map<String, Object> res = new HashMap<String, Object>();
 		try {

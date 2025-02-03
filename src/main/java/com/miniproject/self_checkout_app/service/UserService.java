@@ -1,6 +1,5 @@
 package com.miniproject.self_checkout_app.service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;

@@ -27,7 +27,7 @@ public class StoreCartService {
 	public StoreCart updateStoreCart(StoreCart storeCart) {
 		return storeCartRepository.save(storeCart);
 	}
-	
+
 	public void deleteStoreCart(Long id) {
 		storeCartRepository.deleteById(id);
 	}
@@ -62,12 +62,13 @@ public class StoreCartService {
 		return storeCartRepository.save(storeCart);
 	}
 
-	public UserCart getActiveUserCart(StoreCart storeCart) {
+	public Long getActiveUserCartId(StoreCart storeCart) {
 		try {
-			return storeCart.getUserCarts().stream().filter(UserCart::isActive).toList().getFirst();
+			return storeCart.getUserCarts().stream().filter(UserCart::isActive).toList().getFirst().getId();
 		} catch (Exception e) {
 			return null;
 		}
 	}
+	
 
 }

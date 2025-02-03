@@ -8,14 +8,20 @@ import com.miniproject.self_checkout_app.model.UserCart;
 import com.miniproject.self_checkout_app.model.CartItem;
 import com.miniproject.self_checkout_app.model.Product;
 import com.miniproject.self_checkout_app.repository.CartItemRepository;
+import com.miniproject.self_checkout_app.repository.UserCartRepository;
+
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 
 @Service
 public class CartItemService {
     private final CartItemRepository cartItemRepository;
+    private final UserCartRepository userCartRepository;
 
-    public CartItemService(CartItemRepository cartItemRepository) {
+    public CartItemService(CartItemRepository cartItemRepository, UserCartRepository userCartRepository) {
         this.cartItemRepository = cartItemRepository;
+		this.userCartRepository = userCartRepository;
+		
         
     }
 
@@ -30,7 +36,8 @@ public class CartItemService {
      * @throws Exception if the cart is not active
      */
     @Transactional
-    public  CartItem addItemToCart(Product product, UserCart userCart) throws Exception {
+    public  CartItem addItemToCart(Product product, Long userCartId) throws Exception {
+    	UserCart userCart=userCartRepository.findById(userCartId).get();
         if (userCart.isActive()) {
             // Check if the product already exists in the cart
             CartItem existingItem = null;
@@ -78,8 +85,11 @@ public class CartItemService {
      *
      * @param id the ID of the cart item to delete
      */
-    public void deleteCartItem(Long id) {
-        cartItemRepository.deleteById(id);
+    @Transactional
+    public void deleteCartItem(Long cartItemId) {
+        CartItem cartItem = cartItemRepository.findById(cartItemId)
+            .orElseThrow(() -> new EntityNotFoundException("CartItem not found"));
+        cartItemRepository.delete(cartItem);
     }
 
     /**

@@ -45,7 +45,6 @@ public class User extends CreatedAtUpdatedAt {
 
     // Virtual carts to store the user's cart history
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-//    @JsonManagedReference("user-cart") // Resolves cyclic references for cart relationships
     @JsonIgnore
     private List<UserCart> cart;
 
