@@ -64,8 +64,9 @@ public class PaymentController {
 			org.json.JSONObject options = new org.json.JSONObject();
 
 			double amount=0;
+
+			UserTransaction userTransaction=null;
 //            creating transaction
-			UserTransaction userTransaction = new UserTransaction();
 			User user=userService.getUserFromUsername(userEmail);
 //			this will get current cart for user
 			UserCart cart=userService.getUserCartByUser(user);
@@ -87,7 +88,13 @@ public class PaymentController {
 			
 			
 //			System.out.println(userTransaction);
-			
+		
+			if(userTransactionService.getTransactionFromUserCart(cart).isEmpty()) {
+				userTransaction= new UserTransaction();
+			}
+			else {	
+				userTransaction= userTransactionService.getTransactionFromUserCart(cart).get();
+			}
 			userTransaction.setAmount(amount);
 			userTransaction.setUserCart(cart);
 			userTransaction.setUser(user);

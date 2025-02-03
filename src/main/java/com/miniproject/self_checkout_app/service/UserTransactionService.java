@@ -1,7 +1,10 @@
 package com.miniproject.self_checkout_app.service;
 
+import java.util.Optional;
+
 import org.springframework.stereotype.Service;
 
+import com.miniproject.self_checkout_app.model.UserCart;
 import com.miniproject.self_checkout_app.model.UserTransaction;
 import com.miniproject.self_checkout_app.repository.UserTransactionRepository;
 
@@ -23,6 +26,10 @@ public class UserTransactionService {
 	
 	public UserTransaction getTransactionById(Long id) {
 		return userTransactionRepository.findById(id).get();
+	}
+	
+	public Optional<UserTransaction> getTransactionFromUserCart(UserCart userCart){
+		return userTransactionRepository.findByUserCart(userCart);
 	}
 	
 	
