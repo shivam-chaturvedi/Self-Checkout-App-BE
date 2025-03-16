@@ -49,4 +49,9 @@ public class UserCart extends CreatedAtUpdatedAt{
     @JsonBackReference("cart-transaction")
 	private UserTransaction transaction;
 	
+	@Override
+	public String toString() {
+		return "{Id:"+ id+"}";
+	}
+	
 }

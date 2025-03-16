@@ -65,4 +65,9 @@ public class UserTransaction extends CreatedAtUpdatedAt {
         	this.amount+=item.getAmount();
         }
     }
+    
+    @Override
+    public String toString() {
+    	return "{"+status+"}";
+    }
 }

@@ -121,4 +121,6 @@ public class CartItemService {
     public List<CartItem> getCartItemsByProductId(Long productId) {
         return cartItemRepository.findByProductId(productId);
     }
+  
+  
 }

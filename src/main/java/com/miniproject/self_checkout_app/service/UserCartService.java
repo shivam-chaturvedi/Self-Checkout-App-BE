@@ -1,11 +1,16 @@
 package com.miniproject.self_checkout_app.service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
 import com.miniproject.self_checkout_app.model.UserCart;
+import com.miniproject.self_checkout_app.dto.SoldProductDto;
 import com.miniproject.self_checkout_app.model.CartItem;
 import com.miniproject.self_checkout_app.model.Product;
 import com.miniproject.self_checkout_app.model.StoreCart;
@@ -19,11 +24,13 @@ public class UserCartService {
 
     private final UserCartRepository userCartRepository;
     private final CartItemService cartItemService;
+    private final ProductService productService;
 
-    public UserCartService(UserCartRepository userCartRepository, CartItemService cartItemService) {
+    public UserCartService(UserCartRepository userCartRepository, CartItemService cartItemService, ProductService productService) {
         this.userCartRepository = userCartRepository;
 		
 		this.cartItemService = cartItemService;
+		this.productService = productService;
     }
 
     /**
@@ -100,8 +107,48 @@ public class UserCartService {
     
     @Transactional
     public CartItem addNewItemToUserCart(Long userCartId,Product product) throws Exception {
-    	
     	return cartItemService.addItemToCart(product, userCartId);
+    }
+    
+    public Map<LocalDate,SoldProductDto> getAllSoldProducts() {
+    	try {
+    		Map<LocalDate,SoldProductDto> soldProducts=new HashMap<>();
+    		List<UserCart> carts=userCartRepository.findAll();
+    		SoldProductDto soldProductDto=null;
+    		for(UserCart cart:carts) {
+    			if(cart.getTransaction()!=null && cart.getTransaction().getStatus().equals("Completed")) {
+    				for(CartItem item:cart.getItems()) {
+    					Product product=productService.getProduct(item.getProductId()).get();
+    					LocalDate date=item.getUpdatedAt().toLocalDate();
+    					
+    					if(soldProducts.containsKey(date)) {
+    						soldProductDto= soldProducts.get(date);
+    					}
+    					else {
+        					soldProductDto=new SoldProductDto();
+    					}
+    					
+						soldProductDto.setTotalSoldAmount(item.getAmount()+soldProductDto.getTotalSoldAmount());
+						soldProductDto.setTotalQuantitySold(item.getQuantity()+soldProductDto.getTotalQuantitySold());
+						
+						Map<LocalDateTime,Long> soldQuantityMap=new HashMap<LocalDateTime, Long>();
+						soldQuantityMap.put(item.getUpdatedAt(), item.getQuantity());
+						
+						soldProductDto.getTimeStampsAndQuantitySold().add(soldQuantityMap);
+						
+						soldProductDto.setCategory(product.getCategory());
+						soldProductDto.setProductName(product.getName());
+						soldProductDto.setProductPrice(product.getPrice());
+						soldProductDto.setQuantityLeftInStock(product.getQuantity());
+						
+						soldProducts.put(date, soldProductDto);
+    				}
+    			}
+    		}
+    		return soldProducts;
+    	}catch(Exception e) {
+    		return null;
+    	}
     }
     
   }
