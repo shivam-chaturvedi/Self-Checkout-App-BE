@@ -2,6 +2,8 @@ package com.miniproject.self_checkout_app.repository;
 
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import com.miniproject.self_checkout_app.model.UserCart;
 import com.miniproject.self_checkout_app.model.User;
@@ -27,4 +29,10 @@ public interface UserCartRepository extends JpaRepository<UserCart, Long> {
 
     // Fetch UserCart by User, StoreCart, and active status
     List<UserCart> findByUserAndStoreCartAndIsActive(User user, StoreCart storeCart, boolean isActive);
+    
+
+    @Query("SELECT uc FROM UserCart uc WHERE uc.transaction.status = :status")
+    List<UserCart> findByTransactionStatus(@Param("status") String status);
+
+
 }

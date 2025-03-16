@@ -54,18 +54,26 @@ public class UserTransaction extends CreatedAtUpdatedAt {
     @PrePersist
     protected void onTransactionCreate() {
         this.receipt = "REC-" + UUID.randomUUID().toString();
-        for(CartItem item:this.userCart.getItems()) {
-        	this.amount+=item.getAmount();
+        this.amount = 0.0;
+
+        if (this.userCart != null && this.userCart.getItems() != null) {
+            for (CartItem item : this.userCart.getItems()) {
+                this.amount += item.getAmount();
+            }
         }
     }
-    
+
     @PreUpdate
     protected void onTransactionUpdate() {
-    	for(CartItem item:this.userCart.getItems()) {
-        	this.amount+=item.getAmount();
+        this.amount = 0.0;  
+        
+        if (this.userCart != null && this.userCart.getItems() != null) {
+            for (CartItem item : this.userCart.getItems()) {
+                this.amount += item.getAmount();
+            }
         }
     }
-    
+
     @Override
     public String toString() {
     	return "{"+status+"}";
