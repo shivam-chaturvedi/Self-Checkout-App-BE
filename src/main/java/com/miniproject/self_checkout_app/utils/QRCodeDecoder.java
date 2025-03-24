@@ -27,7 +27,7 @@ public class QRCodeDecoder {
 //	based on esp32 camera capture  
 	private static int width = 160;
 	private static int height = 120;
-
+ 
 	// Function to convert RGB565 data to RGB888 (BufferedImage)
 	private static BufferedImage rgb565ToRgb888(ByteBuffer byteBuffer) throws IOException {
 		byteBuffer.order(java.nio.ByteOrder.LITTLE_ENDIAN);

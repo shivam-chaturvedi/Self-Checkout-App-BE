@@ -19,6 +19,8 @@ import com.miniproject.self_checkout_app.service.StoreCartService;
 import com.miniproject.self_checkout_app.service.UserCartService;
 import com.miniproject.self_checkout_app.utils.QRCodeDecoder;
 
+//ADDING T TO START OF THE MESSAGE WILL DISPLAY MESSAGE IN GREEN IN ESP32 AND ADDING F WILL DISPLAY IN RED AS A ERROR
+
 @Component
 public class CartWebSocketHandler extends AbstractWebSocketHandler {
     private final StoreCartService storeCartService;
@@ -33,7 +35,7 @@ public class CartWebSocketHandler extends AbstractWebSocketHandler {
         this.productService = productService;
     }
 
-    @Override
+    @Override 
     public void afterConnectionEstablished(WebSocketSession session) throws IOException {
         String query = session.getUri().getQuery();
         if (query != null && query.startsWith("cartId=")) {
@@ -41,55 +43,59 @@ public class CartWebSocketHandler extends AbstractWebSocketHandler {
                 this.storeCartId = Long.parseLong(query.split("=")[1]);
                 Optional<StoreCart> storeCart = storeCartService.getStoreCartById(storeCartId);
                 if (storeCart.isEmpty()) {
-                    session.sendMessage(new TextMessage("Invalid cart ID: " + storeCartId));
+                    session.sendMessage(new TextMessage("FInvalid cart ID: " + storeCartId));
                     session.close();
                 }
                 User attachedUser= storeCart.get().getCurrentUser();
                 if(attachedUser!=null) {
-                	session.sendMessage(new TextMessage("Connected:-"+attachedUser.getEmail()));
+                	session.sendMessage(new TextMessage("TConnected:-"+attachedUser.getEmail()));
                 }
             } catch (NumberFormatException e) {
-                session.sendMessage(new TextMessage("Invalid cart ID format."));
+                session.sendMessage(new TextMessage("FInvalid cart ID format."));
                 session.close();
             }
         } else {
-            session.sendMessage(new TextMessage("Missing or invalid cart ID."));
+            session.sendMessage(new TextMessage("FMissing or invalid cart ID."));
             session.close();
         }
     }
+    
 
     @Override
     protected void handleBinaryMessage(WebSocketSession session, BinaryMessage message) throws IOException {
         try {
+        	System.out.println(message);
             String decodedData = QRCodeDecoder.decodeWithZbarImg(message.getPayload());
             if (decodedData != null) {
                 processDecodedData(session, decodedData);
             } else {
-                session.sendMessage(new TextMessage("Invalid barcode."));
+                session.sendMessage(new TextMessage("TScan To Add Product!"));
             }
         } catch (Exception e) {
-            session.sendMessage(new TextMessage("Error: " + e.getMessage()));
+            session.sendMessage(new TextMessage("FError: " + e.getMessage()));
         }
     }
+   
 
+    
     private void processDecodedData(WebSocketSession session, String decodedData) throws Exception {
         Optional<StoreCart> storeCart = storeCartService.getStoreCartById(storeCartId);
         if (storeCart.isPresent()) {
             Long  userCartId = storeCartService.getActiveUserCartId(storeCart.get());
             
             if (userCartId == null) {
-                session.sendMessage(new TextMessage("No active user cart found. Please attach a cart."));
+                session.sendMessage(new TextMessage("FNo active user cart found. Please attach a cart."));
                 return;
             }
             Optional<Product> product = productService.getProduct(Long.parseLong(decodedData));
             if (product.isPresent()) {
                 CartItem cartItem = userCartService.addNewItemToUserCart(userCartId, product.get());
-                session.sendMessage(new TextMessage("Added: " + product.get().getName() + " x " + cartItem.getQuantity()));
+                session.sendMessage(new TextMessage("TAdded: " + product.get().getName() + " x " + cartItem.getQuantity()));
             } else {
-                session.sendMessage(new TextMessage("Product not found for scanned code."));
+                session.sendMessage(new TextMessage("FProduct not found for scanned code."));
             }
         } else {
-            session.sendMessage(new TextMessage("Invalid store cart."));
+            session.sendMessage(new TextMessage("FInvalid store cart."));
         }
     }
 
