@@ -103,7 +103,9 @@ public class UserCartController {
 			if (p.isEmpty()) {
 				throw new Exception("Product With " + rfidtag + " Not Found !");
 			}
-			CartItem item=cartService.addNewItemToUserCart(cartId, p.get());
+			StoreCart storeCart=storeCartService.getStoreCartById(cartId).get();
+			Long userCartId=storeCartService.getActiveUserCartId(storeCart);
+			CartItem item=cartService.addNewItemToUserCart(userCartId, p.get());
 
 			res.put("cartItemId", item.getId());
 //			res.put("product", p);   
