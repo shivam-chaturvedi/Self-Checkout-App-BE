@@ -51,6 +51,9 @@ public class UserTransaction extends CreatedAtUpdatedAt {
 
     private String status = "Pending";
     
+    @Column(nullable = false)
+    private String refundStatus=null;
+    
     @PrePersist
     protected void onTransactionCreate() {
         this.receipt = "REC-" + UUID.randomUUID().toString();

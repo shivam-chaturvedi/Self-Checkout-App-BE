@@ -172,4 +172,61 @@ public class PaymentController {
 			return ResponseEntity.badRequest().body(res);
 		}
 	}
+	
+	@PostMapping(path="/init-refund/{id}")
+	public ResponseEntity<?> initRefund(@PathVariable("id") Long transactionId){
+		Map<String,Object> res=new HashMap<String, Object>();
+		try {
+			String r=userTransactionService.InitRefund(transactionId);
+			res.put("success",r);
+			return ResponseEntity.ok(res);
+		}catch(Exception e) {
+			res.put("error", e.getMessage());
+			return ResponseEntity.badRequest().body(res);
+		}
+	}
+	
+	
+	@GetMapping(path="/get-initiated-refunds")
+	public ResponseEntity<?> getInitRefunds(){
+		Map<String,Object> res=new HashMap<String, Object>();
+		try {
+			res.put("success",userTransactionService.getInitiatedRefunds());
+			return ResponseEntity.ok(res);
+		}catch(Exception e) {
+			res.put("error", e.getMessage());
+			return ResponseEntity.badRequest().body(res);
+		}
+	}
+	
+	@PostMapping(path="/approve-refund/{id}")
+	public ResponseEntity<?> approveRefund(@PathVariable("id") Long transactionId){
+		Map<String,Object> res=new HashMap<String, Object>();
+		try {
+			UserTransaction u=userTransactionService.getTransactionById(transactionId);
+			u.setRefundStatus("Refund Completed! Your Payment Will be Refunded withing 2 Days!");
+			res.put("success",userTransactionService.updateTransaction(u));
+			return ResponseEntity.ok(res);
+		}catch(Exception e) {
+			res.put("error", e.getMessage());
+			return ResponseEntity.badRequest().body(res);
+		}
+	}
+	
+	@PostMapping(path="/reject-refund/{id}")
+	public ResponseEntity<?> rejectRefund(@PathVariable("id") Long transactionId){
+		Map<String,Object> res=new HashMap<String, Object>();
+		try {
+			UserTransaction u=userTransactionService.getTransactionById(transactionId);
+			u.setRefundStatus("Refund Rejected");
+			res.put("success",userTransactionService.updateTransaction(u));
+			return ResponseEntity.ok(res);
+		}catch(Exception e) {
+			res.put("error", e.getMessage());
+			return ResponseEntity.badRequest().body(res);
+		}
+	}
+	
+	
+	
 }
