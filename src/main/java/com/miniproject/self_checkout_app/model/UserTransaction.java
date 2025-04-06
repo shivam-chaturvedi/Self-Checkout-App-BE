@@ -51,7 +51,7 @@ public class UserTransaction extends CreatedAtUpdatedAt {
 
     private String status = "Pending";
     
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String refundStatus=null;
     
     @PrePersist
