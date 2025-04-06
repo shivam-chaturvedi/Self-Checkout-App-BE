@@ -55,7 +55,7 @@ public class UserTransactionService {
 	public List<UserTransaction> getInitiatedRefunds(){
 		List<UserTransaction> res=new ArrayList<UserTransaction>();
 		for(UserTransaction u:userTransactionRepository.findAll()) {
-			if(u.getRefundStatus().equals("Refund Initiated!")) {
+			if(u.getRefundStatus()!=null && u.getRefundStatus().equals("Refund Initiated!")) {
 				res.add(u);
 			}
 		}

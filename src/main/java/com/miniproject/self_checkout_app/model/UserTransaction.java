@@ -52,7 +52,7 @@ public class UserTransaction extends CreatedAtUpdatedAt {
     private String status = "Pending";
     
     @Column(nullable = true)
-    private String refundStatus=null;
+    private String refundStatus="Not Initiated";
     
     @PrePersist
     protected void onTransactionCreate() {

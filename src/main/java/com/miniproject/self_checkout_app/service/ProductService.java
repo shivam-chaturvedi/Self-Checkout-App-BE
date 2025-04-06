@@ -37,6 +37,7 @@ public class ProductService {
      */
     public Product updateProduct(Product product) {
         Product old = productRepository.findById(product.getId()).get();
+        System.out.println(product);
         
         // Check if the product price has been updated
         if (old.getPrice() != product.getPrice()) {

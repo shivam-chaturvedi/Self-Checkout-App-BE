@@ -25,6 +25,7 @@ import com.miniproject.self_checkout_app.utils.QRCodeDecoder;
 
 //ADDING T TO START OF THE MESSAGE WILL DISPLAY MESSAGE IN GREEN IN ESP32 AND ADDING F WILL DISPLAY IN RED AS A ERROR
 // SENDING SHOW_PAYMENT_QR WILL DISPLAY PAYMENT QR CODE IN TFT DISPLAY 
+//REFRESH_QR_IMAGE IS USED TO REFRESH OR REDOWNLOAD THE IQR IMAGE IN ESP32 
 @Component
 public class CartWebSocketHandler extends AbstractWebSocketHandler {
 	private final StoreCartService storeCartService;
@@ -121,7 +122,10 @@ public class CartWebSocketHandler extends AbstractWebSocketHandler {
 					isPaymentQrCodeShowing = true;
 				}
 			}
-
+			else if(payload.startsWith("REFRESH_QR_IMAGE")) {
+//				this will update the qr code image 
+				sendTextMessageToAllSessions(payload);
+			}
 			else {
 				isPaymentQrCodeShowing = false;
 
