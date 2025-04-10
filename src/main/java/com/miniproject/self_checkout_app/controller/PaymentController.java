@@ -146,7 +146,7 @@ public class PaymentController {
 				 for(CartItem c:cart.getItems()) {
 					 Product p=productService.getProduct(c.getProductId()).get();
 //					 update quantity of products if transaction is successfull
-					 p.setQuantity(c.getQuantity());
+					 p.setQuantity(p.getQuantity()-c.getQuantity());
 					 
 					 productService.updateProduct(p);
 				}
