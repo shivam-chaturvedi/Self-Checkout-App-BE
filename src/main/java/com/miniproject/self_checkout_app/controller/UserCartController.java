@@ -1,11 +1,14 @@
 package com.miniproject.self_checkout_app.controller;
 
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,6 +27,7 @@ import com.miniproject.self_checkout_app.service.UserCartService;
 import com.miniproject.self_checkout_app.service.ProductService;
 import com.miniproject.self_checkout_app.service.StoreCartService;
 import com.miniproject.self_checkout_app.service.UserService;
+import com.miniproject.self_checkout_app.utils.BillGenerator;
 
 @RestController
 public class UserCartController {
@@ -32,12 +36,14 @@ public class UserCartController {
 	private ProductService productService;
 	private UserService userService;
 	private StoreCartService storeCartService;
+	private BillGenerator billGenerator;
 
 	public UserCartController(CartItemService cartItemService, ProductService productService, UserService userService,
-			UserCartService cartService,StoreCartService storeCartService) {
+			UserCartService cartService,StoreCartService storeCartService,BillGenerator billGenerator) {
 		this.cartService = cartService;
 		this.userService = userService;
 		this.storeCartService=storeCartService;
+		this.billGenerator=billGenerator;
 		this.productService = productService;
 		this.cartItemService = cartItemService;
 
@@ -159,6 +165,18 @@ public class UserCartController {
 		}catch(Exception e) {
 			res.put("error", e.getMessage());
 			return ResponseEntity.badRequest().body(res);
+		}
+	}
+	
+	@GetMapping(path="/user-cart/get-bill/{transactionId}")
+	public ResponseEntity<?> getBillReportPdf(@PathVariable("transactionId") Long transactionId){
+		try {
+			ByteArrayOutputStream outputStream=this.billGenerator.getBillReport(transactionId);
+			HttpHeaders headers = new HttpHeaders();
+			headers.add("Content-Disposition", "attachment; filename=Transaction_"+transactionId+".pdf");
+			return new ResponseEntity<>(outputStream.toByteArray(), headers, HttpStatus.OK);
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
 		}
 	}
 

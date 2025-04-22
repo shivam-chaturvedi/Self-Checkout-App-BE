@@ -29,7 +29,7 @@ public class JwtAuthenticationFilter implements Filter {
 	private final JwtUtil jwtUtil;
 	private final UserService userService;
 	private final String[] openPaths = { "/login", "/signup", "/verify-token", "/product/qr/", "/store-cart/qr/",
-			"/store-cart/get-attached-user/", "/cart", "/reports","/notify-threat","/user-cart/add-item-by-rfid-tag/" };
+			"/store-cart/get-attached-user/", "/cart", "/reports","/notify-threat","/user-cart/add-item-by-rfid-tag/","/user-cart/get-bill/" };
 
 	public JwtAuthenticationFilter(JwtUtil jwtUtil, UserService userService) {
 		this.jwtUtil = jwtUtil;
