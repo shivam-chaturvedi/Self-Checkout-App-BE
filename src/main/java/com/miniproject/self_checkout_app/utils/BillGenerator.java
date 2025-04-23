@@ -21,17 +21,13 @@ import java.util.Map;
 @Component
 public class BillGenerator {
 
-	private final UserTransactionService userTransactionService;
 	private final ProductService productService;
 
-	public BillGenerator(UserTransactionService userTransactionService, ProductService productService) {
-		this.userTransactionService = userTransactionService;
+	public BillGenerator(ProductService productService) {
 		this.productService = productService;
 	}
 
-	public ByteArrayOutputStream getBillReport(Long TransactionId) throws Exception {
-
-		UserTransaction userTransaction = userTransactionService.getTransactionById(TransactionId);
+	public ByteArrayOutputStream getBillReport(UserTransaction userTransaction) throws Exception {
 
 		if (userTransaction == null) {
 			return null;
@@ -116,7 +112,7 @@ public class BillGenerator {
 		cell.setBackgroundColor(headerColor);
 		table.addCell(cell);
 
-		cell = new PdfPCell(new Phrase("Total Amount\n", headerFont));
+		cell = new PdfPCell(new Phrase("Amount\n", headerFont));
 		cell.setBackgroundColor(headerColor);
 		table.addCell(cell);
 
@@ -138,7 +134,7 @@ public class BillGenerator {
 		document.add(table);
 
 		Font totalFont = new Font(Font.FontFamily.HELVETICA, 18, Font.BOLD, BaseColor.DARK_GRAY);
-		Paragraph totalCostParagraph = new Paragraph("Total Cost(INR): " + totalCost, totalFont);
+		Paragraph totalCostParagraph = new Paragraph("Total Amount(INR): " + totalCost, totalFont);
 		totalCostParagraph.setAlignment(Element.ALIGN_RIGHT);
 		totalCostParagraph.setSpacingBefore(10f);
 		document.add(totalCostParagraph);

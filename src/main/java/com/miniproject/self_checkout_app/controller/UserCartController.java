@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.miniproject.self_checkout_app.model.UserCart;
+import com.miniproject.self_checkout_app.model.UserTransaction;
 import com.miniproject.self_checkout_app.model.CartItem;
 import com.miniproject.self_checkout_app.model.Product;
 import com.miniproject.self_checkout_app.model.StoreCart;
@@ -29,6 +30,7 @@ import com.miniproject.self_checkout_app.service.UserCartService;
 import com.miniproject.self_checkout_app.service.ProductService;
 import com.miniproject.self_checkout_app.service.StoreCartService;
 import com.miniproject.self_checkout_app.service.UserService;
+import com.miniproject.self_checkout_app.service.UserTransactionService;
 import com.miniproject.self_checkout_app.utils.BillGenerator;
 
 @RestController
@@ -39,9 +41,11 @@ public class UserCartController {
 	private UserService userService;
 	private StoreCartService storeCartService;
 	private BillGenerator billGenerator;
+	private final UserTransactionService userTransactionService;
 
 	public UserCartController(CartItemService cartItemService, ProductService productService, UserService userService,
-			UserCartService cartService,StoreCartService storeCartService,BillGenerator billGenerator) {
+			UserCartService cartService,StoreCartService storeCartService,BillGenerator billGenerator, UserTransactionService userTransactionService) {
+		this.userTransactionService = userTransactionService;
 		this.cartService = cartService;
 		this.userService = userService;
 		this.storeCartService=storeCartService;
@@ -173,10 +177,11 @@ public class UserCartController {
 	@GetMapping(path="/user-cart/get-bill/{transactionId}")
 	public ResponseEntity<?> getBillReportPdf(@PathVariable("transactionId") Long transactionId){
 		try {
-			ByteArrayOutputStream outputStream=this.billGenerator.getBillReport(transactionId);
+			UserTransaction userTransaction=userTransactionService.getTransactionById(transactionId);
+			ByteArrayOutputStream outputStream=this.billGenerator.getBillReport(userTransaction);
 			HttpHeaders headers = new HttpHeaders();
 			 headers.setContentType(MediaType.APPLICATION_PDF);
-			    headers.setContentDisposition(ContentDisposition.inline().filename("Transaction_"+transactionId+".pdf").build());
+			    headers.setContentDisposition(ContentDisposition.attachment().filename("Transaction_"+transactionId+".pdf").build());
 			    headers.setCacheControl("no-cache, no-store, must-revalidate");
 			    headers.setPragma("no-cache");
 			return new ResponseEntity<>(outputStream.toByteArray(), headers, HttpStatus.OK);

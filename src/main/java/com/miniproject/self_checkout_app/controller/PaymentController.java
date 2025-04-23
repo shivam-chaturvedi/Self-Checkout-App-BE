@@ -16,6 +16,7 @@ import com.miniproject.self_checkout_app.model.Product;
 import com.miniproject.self_checkout_app.model.User;
 import com.miniproject.self_checkout_app.model.UserTransaction;
 import com.miniproject.self_checkout_app.service.UserCartService;
+import com.miniproject.self_checkout_app.service.EmailService;
 import com.miniproject.self_checkout_app.service.ProductService;
 import com.miniproject.self_checkout_app.service.StoreCartService;
 import com.miniproject.self_checkout_app.service.UserService;
@@ -36,19 +37,21 @@ public class PaymentController {
 	private final ProductService productService;
 	private final StoreCartService storeCartService;
 	private final UserCartService cartService;
-
+	private final EmailService emailService;
+	
 	@Value("${razorpay.key}")
 	private String RAZORPAY_KEY;
 
 	@Value("${razorpay.secret}")
 	private String RAZORPAY_SECRET;
 
-	public PaymentController(UserTransactionService userTransactionService, UserService userService,ProductService productService,UserCartService cartService, StoreCartService storeCartService) {
+	public PaymentController(UserTransactionService userTransactionService, UserService userService,ProductService productService,UserCartService cartService, StoreCartService storeCartService, EmailService emailService) {
 		this.userTransactionService = userTransactionService;
 		this.userService = userService;
 		this.storeCartService = storeCartService;
 		this.cartService=cartService;
 		this.productService=productService;
+		this.emailService = emailService;
 	}
 
 	// Create an order on Razorpay
@@ -147,7 +150,6 @@ public class PaymentController {
 					 Product p=productService.getProduct(c.getProductId()).get();
 //					 update quantity of products if transaction is successfull
 					 p.setQuantity(p.getQuantity()-c.getQuantity());
-					 
 					 productService.updateProduct(p);
 				}
 
@@ -159,6 +161,7 @@ public class PaymentController {
 				 storeCartService.detachStoreCartFromAnyUser(cart.getStoreCart());
 //				this will update the transaction status 
 				userTransactionService.updateTransaction(userTransaction);
+				emailService.sendBillConfirmation(userTransaction.getUser().getEmail(), userTransaction);
 				res.put("success", "Payment is successful and captured.");
 				return ResponseEntity.ok(res);
 			} else {

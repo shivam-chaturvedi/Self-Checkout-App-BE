@@ -6,13 +6,16 @@ import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.miniproject.self_checkout_app.service.EmailService;
 import com.miniproject.self_checkout_app.service.UserCartService;
+import com.miniproject.self_checkout_app.service.UserTransactionService;
 
 @RestController
 public class ReportsController {
 	private final UserCartService userCartService;
 	
-	public ReportsController(UserCartService userCartService) {
+	public ReportsController(UserCartService userCartService, EmailService emailService, UserTransactionService userTransactionService) {
 		this.userCartService=userCartService;
 	}
 	
@@ -27,6 +30,6 @@ public class ReportsController {
 			res.put("error", e.getMessage());
 			return ResponseEntity.badRequest().body(res);
 		}
-		
 	}
+	 
 }
