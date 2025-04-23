@@ -7,8 +7,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -173,7 +175,10 @@ public class UserCartController {
 		try {
 			ByteArrayOutputStream outputStream=this.billGenerator.getBillReport(transactionId);
 			HttpHeaders headers = new HttpHeaders();
-			headers.add("Content-Disposition", "attachment; filename=Transaction_"+transactionId+".pdf");
+			 headers.setContentType(MediaType.APPLICATION_PDF);
+			    headers.setContentDisposition(ContentDisposition.inline().filename("Transaction_"+transactionId+".pdf").build());
+			    headers.setCacheControl("no-cache, no-store, must-revalidate");
+			    headers.setPragma("no-cache");
 			return new ResponseEntity<>(outputStream.toByteArray(), headers, HttpStatus.OK);
 		} catch (Exception e) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());

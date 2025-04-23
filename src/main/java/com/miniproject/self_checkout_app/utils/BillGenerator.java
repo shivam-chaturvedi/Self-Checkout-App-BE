@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component;
 
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.PdfWriter;
+import com.itextpdf.text.pdf.codec.Base64.InputStream;
 import com.miniproject.self_checkout_app.model.CartItem;
 import com.miniproject.self_checkout_app.model.Product;
 import com.miniproject.self_checkout_app.model.UserTransaction;
@@ -59,11 +60,18 @@ public class BillGenerator {
 
 		PdfWriter.getInstance(document, baos);
 		document.open();
-
-		Image image = Image.getInstance("src/main/resources/logo.png");
-		image.setAbsolutePosition(20f, 780f);
-		image.scaleToFit(30f, 30f);
-		document.add(image);
+		
+		try {
+		InputStream is = (InputStream) getClass().getClassLoader().getResourceAsStream("logo.png");
+			Image image = Image.getInstance(is.readAllBytes());
+	
+			image.setAbsolutePosition(20f, 780f);
+			image.scaleToFit(30f, 30f);
+			document.add(image);
+		}
+		catch(Exception e) {
+			System.out.println(e.getMessage());
+		}
 
 		Font font = new Font(Font.FontFamily.HELVETICA, 30, Font.BOLD, BaseColor.RED);
 		String text = "Retail Edge";

@@ -6,8 +6,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -90,9 +92,11 @@ public class ProductController {
 
 			outputStream = QRCodeGenerator.generateBarcode(p.getId().toString());
 
-			// Set headers for file download
 			HttpHeaders headers = new HttpHeaders();
-			headers.add("Content-Disposition", "attachment; filename=qr_code_"+p.getName()+".png");
+			  headers.setContentType(MediaType.IMAGE_PNG);
+			    headers.setContentDisposition(ContentDisposition.attachment().filename("qr_code_"+p.getName()+".png").build());
+			    headers.setCacheControl("no-cache, no-store, must-revalidate");
+			    headers.setPragma("no-cache");
 
 			return new ResponseEntity<>(outputStream.toByteArray(), headers, HttpStatus.OK);
 		} catch (Exception e) {

@@ -5,8 +5,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -47,9 +49,12 @@ public class StoreCartController {
 
 			outputStream = QRCodeGenerator.generateBarcode(storeCart.getId().toString());
 
-			// Set headers for file download
 			HttpHeaders headers = new HttpHeaders();
-			headers.add("Content-Disposition", "attachment; filename=store_cart_qr_code_" + storeCart.getId() + ".png");
+			  headers.setContentType(MediaType.IMAGE_PNG);
+			    headers.setContentDisposition(ContentDisposition.attachment().filename("store_cart_qr_code_" + storeCart.getId() + ".png").build());
+			    headers.setCacheControl("no-cache, no-store, must-revalidate");
+			    headers.setPragma("no-cache");
+
 
 			return new ResponseEntity<>(outputStream.toByteArray(), headers, HttpStatus.OK);
 		} catch (Exception e) {
